@@ -39,7 +39,7 @@ func NewTag(name, provider, additionalInfo string) Tag {
 }
 func initDb(db_connection string) (*sql.DB, error) {
 	db, err := sql.Open("mysql",
-		db_connection)
+		db_connection + "?parseTime=true")
 
 	if err != nil {
 		return nil, err
