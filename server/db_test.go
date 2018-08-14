@@ -1,7 +1,7 @@
 package server
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 	"testing"
 	"time"
 )
@@ -149,6 +149,7 @@ func setupEnv() Env {
 	}
 	truncateTable("tags")
 	truncateTable("analyzes")
+        log.SetLevel(log.DebugLevel)
 	return Env{db: db}
 
 }
