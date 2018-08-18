@@ -98,8 +98,8 @@ func TestGetAnalyzes(t *testing.T) {
 		tag_id,
 		time.Date(2009, 1, 1, 12, 0, 0, 0, time.UTC),
 		time.Date(2012, 1, 1, 12, 0, 0, 0, time.UTC),
-                0,
-                0,
+		0,
+		0,
 		float64(0.0),
 		float64(0.0),
 		float64(0.0),
@@ -112,8 +112,8 @@ func TestGetAnalyzes(t *testing.T) {
 		tag_id,
 		time.Date(2013, 1, 1, 12, 0, 0, 0, time.UTC),
 		time.Date(2015, 1, 1, 12, 0, 0, 0, time.UTC),
-                0,
-                0,
+		0,
+		0,
 		float64(0.0),
 		float64(0.0),
 		float64(0.0),
@@ -122,24 +122,22 @@ func TestGetAnalyzes(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-        analyzes, err := env.getAnalyzes(tag1.Name, time.Date(2000, 1, 1, 12, 0, 0, 0, time.UTC), time.Date(2020, 1, 1, 12, 0, 0, 0, time.UTC))
-        if a1 != analyzes[0] || a2 != analyzes[1] {
-            t.Fatal("Wrong analyzes in 2000-2020 query")
-        }
-        analyzes, err = env.getAnalyzes(tag1.Name, time.Date(2020, 1, 1, 12, 0, 0, 0, time.UTC), time.Date(2020, 1, 1, 12, 0, 0, 0, time.UTC))
-        if len(analyzes) != 0 {
-         t.Fatal("Wrong analyzes in 2020-2020 query")
-        }
-         analyzes, err = env.getAnalyzes(tag1.Name, time.Date(2011, 1, 1, 12, 0, 0, 0, time.UTC), time.Date(2016, 1, 1, 12, 0, 0, 0, time.UTC))
-        if a2 != analyzes[0]{
-            t.Fatal("Wrong analyzes in 2011-2016 query")
-        }
-         analyzes, err = env.getAnalyzes(tag1.Name, time.Date(2009, 1, 1, 12, 0, 0, 0, time.UTC), time.Date(2012, 1, 1, 12, 0, 0, 0, time.UTC))
-        if a1 != analyzes[0] {
-            t.Fatal("Wrong analyzes in 2009-2012 query")
-        }
-
-
+	analyzes, err := env.getAnalyzes(tag1.Name, time.Date(2000, 1, 1, 12, 0, 0, 0, time.UTC), time.Date(2020, 1, 1, 12, 0, 0, 0, time.UTC))
+	if a1 != analyzes[0] || a2 != analyzes[1] {
+		t.Fatal("Wrong analyzes in 2000-2020 query")
+	}
+	analyzes, err = env.getAnalyzes(tag1.Name, time.Date(2020, 1, 1, 12, 0, 0, 0, time.UTC), time.Date(2020, 1, 1, 12, 0, 0, 0, time.UTC))
+	if len(analyzes) != 0 {
+		t.Fatal("Wrong analyzes in 2020-2020 query")
+	}
+	analyzes, err = env.getAnalyzes(tag1.Name, time.Date(2011, 1, 1, 12, 0, 0, 0, time.UTC), time.Date(2016, 1, 1, 12, 0, 0, 0, time.UTC))
+	if a2 != analyzes[0] {
+		t.Fatal("Wrong analyzes in 2011-2016 query")
+	}
+	analyzes, err = env.getAnalyzes(tag1.Name, time.Date(2009, 1, 1, 12, 0, 0, 0, time.UTC), time.Date(2012, 1, 1, 12, 0, 0, 0, time.UTC))
+	if a1 != analyzes[0] {
+		t.Fatal("Wrong analyzes in 2009-2012 query")
+	}
 
 }
 func setupEnv() Env {
@@ -149,7 +147,7 @@ func setupEnv() Env {
 	}
 	truncateTable("tags")
 	truncateTable("analyzes")
-        log.SetLevel(log.DebugLevel)
+	log.SetLevel(log.DebugLevel)
 	return Env{db: db}
 
 }

@@ -1,16 +1,18 @@
 package server
 
 import (
+	"database/sql"
 	"errors"
 	"time"
-	"database/sql"
 
 	_ "github.com/go-sql-driver/mysql"
-        log "github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 type Env struct {
-	db *sql.DB
+	db            *sql.DB
+	twitterApiKey string
+	newsApiKey    string
 }
 
 type Analyzis struct {
@@ -40,7 +42,7 @@ func NewTag(name, provider, additionalInfo string) Tag {
 }
 func initDb(db_connection string) (*sql.DB, error) {
 	db, err := sql.Open("mysql",
-		db_connection + "?parseTime=true")
+		db_connection+"?parseTime=true")
 
 	if err != nil {
 		return nil, err
@@ -84,11 +86,11 @@ func (env Env) createTag(tag Tag) error {
 		return errors.New("Tag already present")
 	}
 	_, err = env.db.Exec("INSERT INTO tags (name, provider, additional_info) VALUES (?, ?, ?)", tag.Name, tag.Provider, tag.AdditionalInfo)
-        if err != nil {
-           return err
-        }
-        log.Debug("Tag " + tag.Name + " inserted")
-        return nil
+	if err != nil {
+		return err
+	}
+	log.Debug("Tag " + tag.Name + " inserted")
+	return nil
 }
 
 func (env Env) getTagID(name string) (int, error) {
@@ -116,7 +118,7 @@ func (env Env) getTags(name string) ([]Tag, error) {
 		}
 		tags = append(tags, tag)
 	}
-        log.Debug(tags)
+	log.Debug(tags)
 	return tags, nil
 
 }
@@ -133,11 +135,11 @@ func (env Env) tagIsPresent(name string) (bool, error) {
 
 func (env Env) createAnalyzis(a Analyzis) error {
 	_, err := env.db.Exec("INSERT INTO analyzes (tag_id, timestamp_first, timestamp_last, amount_of_tweets, amount_of_news, reaction_avg, reaction_tweets, reaction_news) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", a.TagID, a.TimestampFirst, a.TimestampLast, a.AmountOfTweets, a.AmountOfNews, a.ReactionAvg, a.ReactionTweets, a.ReactionNews)
-        if err != nil {
-           return err
-        }
+	if err != nil {
+		return err
+	}
 	log.Debug(a)
-        return nil
+	return nil
 }
 
 func (env Env) getAnalyzes(tagName string, timestampFirst, timestampLast time.Time) ([]Analyzis, error) {
@@ -162,6 +164,6 @@ func (env Env) getAnalyzes(tagName string, timestampFirst, timestampLast time.Ti
 	if err != nil {
 		return nil, err
 	}
-        log.Debug(analyzes)
+	log.Debug(analyzes)
 	return analyzes, nil
 }
