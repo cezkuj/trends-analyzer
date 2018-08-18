@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	"golang.org/x/crypto/acme/autocert"
 	"io"
@@ -45,10 +46,53 @@ func scrap(env Env) func(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
-		keyword := dat["keyword"]
-		go analyzer.ScrapTwitter(keyword, env.twitterApiKey)
-		go analyzer.ScrapNews(keyword, env.newsApiKey)
+		keyword, present := dat["keyword"]
+		if !present {
+			w.WriteHeader(http.StatusBadRequest)
+			io.WriteString(w, "Keyword not present")
+			return
+		}
+		date, present := dat["present"]
+		if !present {
+			date = "any"
+		} else if date != "today" {
+			w.WriteHeader(http.StatusBadRequest)
+			io.WriteString(w, fmt.Sprintf("Date %v not supported", date))
+			return
+		}
+
+		country, present := dat["country"]
+		if !present {
+			country = "any"
+		} else if country != "pl" || country != "gb" || country != "us" || country != "de" || country != "fr" {
+			w.WriteHeader(http.StatusBadRequest)
+			io.WriteString(w, fmt.Sprintf("Country %v not supported", country))
+			return
+		}
+		provider, present := dat["provider"]
+		if !present {
+			provider = "both"
+		}
+		switch provider {
+		case "twitter":
+			go analyzer.AnalyzeTwitter(keyword, country, date, env.twitterApiKey)
+		case "news":
+			go analyzer.AnalyzeNews(keyword, country, date, env.newsApiKey)
+		case "both":
+			go analyzer.AnalyzeTwitter(keyword, country, date, env.twitterApiKey)
+			go analyzer.AnalyzeNews(keyword, country, date, env.newsApiKey)
+		default:
+			w.WriteHeader(http.StatusBadRequest)
+			io.WriteString(w, "Provider not recognized.")
+		}
 	}
+}
+
+func status(env Env) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		io.WriteString(w, "showing all statuses.")
+	}
+
 }
 
 func startProdServer(env Env) {
@@ -107,6 +151,7 @@ func createServeMux(env Env) *http.ServeMux {
 	router := mux.NewRouter()
 	apiRouter := router.PathPrefix("/api").Subrouter()
 	apiRouter.HandleFunc("/scrap", scrap(env)).Methods("POST")
+	apiRouter.HandleFunc("/status", status(env)).Methods("GET")
 	serveMux := &http.ServeMux{}
 	serveMux.Handle("/", router)
 	return serveMux

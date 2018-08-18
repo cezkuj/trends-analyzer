@@ -53,7 +53,7 @@ func init() {
 	rootCmd.MarkFlagRequired("pass")
 	rootCmd.Flags().StringVarP(&dbHost, "host", "o", "", "Sets host for database conneciton, required")
 	rootCmd.MarkFlagRequired("host")
-	rootCmd.Flags().StringVarP(&dbName, "name", "n", "", "Sets name for database conneciton, required")
+	rootCmd.Flags().StringVarP(&dbName, "name", "d", "", "Sets name for database conneciton, required")
 	rootCmd.MarkFlagRequired("name")
 	rootCmd.Flags().BoolVarP(&prod, "prod", "r", false, "Sets production mode with tls enabled. Default value is false.")
 }
