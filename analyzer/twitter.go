@@ -1,30 +1,69 @@
 package analyzer
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 )
 
-type tweet struct {
-	id        int
-	text      string
-	timestamp time.Time
+type twitterApi struct {
+	Statuses []status `json: "statuses"`
 }
 
-func (t tweet) Text() string {
-	return t.text
+type status struct {
+	CreatedAt time.Time `json: "created_at"`
+	Id        int       `json: "id"`
+	Text      string    `json: "text"`
 }
 
 func AnalyzeTwitter(keyword, country, date, twitterApiKey string) {
-	tweets := getTweets(keyword, country, date)
+	tweets, err := getTweets(keyword, country, date, twitterApiKey)
+	if err != nil {
+		log.Error(err)
+		return
+	}
 	for _, t := range tweets {
-		log.Debug(fmt.Sprintf("Analyzing tweet %v - %v", t.id, t.timestamp))
 		go analyzeText(t, "twitter")
 	}
 }
 
-func getTweets(keyword, country, date string) []tweet {
-	return nil
+func getTweets(keyword, lang, date, twitterApiKey string) ([]text, error) {
+	tt := []text{}
+	client := clientWithTimeout(false)
+	langParam := ""
+	if lang != "any" {
+		if lang == "gb" || lang == "us" {
+			lang = "en"
+		}
+		langParam = fmt.Sprintf("&lang=%v", lang)
+	}
+	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.twitter.com/1.1/search/tweets.json?q=%v%v", keyword, langParam), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Authorization", twitterApiKey)
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	decoder := json.NewDecoder(resp.Body)
+	var tA twitterApi
+	err = decoder.Decode(&tA)
+	if err != nil {
+		return nil, err
+	}
+	for _, s := range tA.Statuses {
+		t := text{
+			id:        s.Id,
+			text:      s.Text,
+			timestamp: s.CreatedAt,
+		}
+		log.Debug(t)
+		tt = append(tt, t)
+	}
+	return tt, nil
 }

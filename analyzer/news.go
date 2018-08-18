@@ -10,12 +10,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type news struct {
-	id        int
-	text      string
-	timestamp time.Time
-}
-
 type newsApi struct {
 	Status       string    `json:"status"`
 	TotalResults int       `json:"totalResults"`
@@ -28,10 +22,6 @@ type article struct {
 	PublishedAt time.Time `json: "publishedAt"`
 }
 
-func (n news) Text() string {
-	return n.text
-}
-
 func AnalyzeNews(keyword, country, date, newsApiKey string) {
 	nn, err := getNews(keyword, country, date, newsApiKey)
 	if err != nil {
@@ -39,13 +29,12 @@ func AnalyzeNews(keyword, country, date, newsApiKey string) {
 		return
 	}
 	for _, n := range nn {
-		log.Debug(fmt.Sprintf("Analyzing news %v - %v", n.id, n.timestamp))
 		go analyzeText(n, "news")
 	}
 }
 
-func getNews(keyword, country, date, newsApiKey string) ([]news, error) {
-	nn := []news{}
+func getNews(keyword, country, date, newsApiKey string) ([]text, error) {
+	tt := []text{}
 	client := clientWithTimeout(false)
 	countryParam := ""
 	if country != "any" {
@@ -68,17 +57,17 @@ func getNews(keyword, country, date, newsApiKey string) ([]news, error) {
 		return nil, err
 	}
 	for _, a := range nA.Articles {
-		text := fmt.Sprintf("%v %v", a.Title, a.Description)
-		id := hash(text)
-		n := news{
+		txt := fmt.Sprintf("%v %v", a.Title, a.Description)
+		id := hash(txt)
+		t := text{
 			id:        id,
-			text:      text,
+			text:      txt,
 			timestamp: a.PublishedAt,
 		}
-		log.Debug(n)
-		nn = append(nn, n)
+		log.Debug(t)
+		tt = append(tt, t)
 	}
-	return nn, nil
+	return tt, nil
 }
 
 func hash(s string) int {

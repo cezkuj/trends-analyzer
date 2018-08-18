@@ -6,8 +6,10 @@ import (
 	"time"
 )
 
-type text interface {
-	Text() string
+type text struct {
+	id        int
+	text      string
+	timestamp time.Time
 }
 
 func clientWithTimeout(tlsSecure bool) (client http.Client) {
