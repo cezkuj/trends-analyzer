@@ -41,7 +41,9 @@ func StartServer(dbCfg DbCfg, twitterApiKey, newsApiKey string, prod bool) {
 
 func scrap(env Env) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		dat, err := parseReaderToJson(r.Body)
+		decoder := json.NewDecoder(r.Body)
+		var dat map[string]string
+		err := decoder.Decode(&dat)
 		if err != nil {
 			log.Println(err)
 			return
@@ -52,7 +54,7 @@ func scrap(env Env) func(w http.ResponseWriter, r *http.Request) {
 			io.WriteString(w, "Keyword not present")
 			return
 		}
-		date, present := dat["present"]
+		date, present := dat["date"]
 		if !present {
 			date = "any"
 		} else if date != "today" {
@@ -64,7 +66,7 @@ func scrap(env Env) func(w http.ResponseWriter, r *http.Request) {
 		country, present := dat["country"]
 		if !present {
 			country = "any"
-		} else if country != "pl" || country != "gb" || country != "us" || country != "de" || country != "fr" {
+		} else if country != "pl" && country != "gb" && country != "us" && country != "de" && country != "fr" {
 			w.WriteHeader(http.StatusBadRequest)
 			io.WriteString(w, fmt.Sprintf("Country %v not supported", country))
 			return

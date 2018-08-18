@@ -8,7 +8,7 @@ import (
 )
 
 type tweet struct {
-	id        string
+	id        int
 	text      string
 	timestamp time.Time
 }
