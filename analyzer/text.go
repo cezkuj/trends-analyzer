@@ -57,11 +57,11 @@ func Analyze(env db.Env, keyword, textProvider, country, date string, tagID int)
        }
        c := make(chan analyzedText)
        wg := new(sync.WaitGroup)
-       wg.Add(1)
+       
        for _, t := range tt {
+	  wg.Add(1)
           go analyzeText(t, c, wg)
        }
-       wg.Done()
        go func(){
           wg.Wait()
           close(c)
@@ -88,7 +88,6 @@ func Analyze(env db.Env, keyword, textProvider, country, date string, tagID int)
 
 }
 func analyzeText(t text, c chan analyzedText, wg *sync.WaitGroup){
-     wg.Add(1)
      defer wg.Done()
      s, err := analyzeSentiment(t.text)
      if err != nil {
