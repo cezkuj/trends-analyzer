@@ -19,17 +19,6 @@ type status struct {
 	Text      string    `json: "text"`
 }
 
-func AnalyzeTwitter(keyword, country, date, twitterApiKey string) {
-	tweets, err := getTweets(keyword, country, date, twitterApiKey)
-	if err != nil {
-		log.Error(err)
-		return
-	}
-	for _, t := range tweets {
-		go analyzeText(t, "twitter")
-	}
-}
-
 func getTweets(keyword, lang, date, twitterApiKey string) ([]text, error) {
 	tt := []text{}
 	client := clientWithTimeout(false)

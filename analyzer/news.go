@@ -22,17 +22,6 @@ type article struct {
 	PublishedAt time.Time `json: "publishedAt"`
 }
 
-func AnalyzeNews(keyword, country, date, newsApiKey string) {
-	nn, err := getNews(keyword, country, date, newsApiKey)
-	if err != nil {
-		log.Error(err)
-		return
-	}
-	for _, n := range nn {
-		go analyzeText(n, "news")
-	}
-}
-
 func getNews(keyword, country, date, newsApiKey string) ([]text, error) {
 	tt := []text{}
 	client := clientWithTimeout(false)

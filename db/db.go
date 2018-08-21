@@ -1,4 +1,4 @@
-package server
+package db
 
 import (
 	"database/sql"
@@ -11,8 +11,12 @@ import (
 
 type Env struct {
 	db            *sql.DB
-	twitterApiKey string
-	newsApiKey    string
+	TwitterApiKey string
+	NewsApiKey    string
+}
+
+func NewEnv(db *sql.DB, twitterApiKey, newsApiKey string) Env {
+	return Env{db, twitterApiKey, newsApiKey}
 }
 
 type Analyzis struct {
@@ -21,12 +25,11 @@ type Analyzis struct {
 	TimestampLast  time.Time
 	AmountOfTweets int
 	AmountOfNews   int
-	ReactionAvg    float64
-	ReactionTweets float64
-	ReactionNews   float64
+	ReactionAvg    float32
+	ReactionTweets float32
+	ReactionNews   float32
 }
-
-func NewAnalyzis(tagID int, timestampFirst, timestampLast time.Time, amountOfTweets, amountOfNews int, reactionAvg, reactionTweets, reactionNews float64) Analyzis {
+func NewAnalyzis(tagID int, timestampFirst, timestampLast time.Time, amountOfTweets, amountOfNews int, reactionAvg, reactionTweets, reactionNews float32) Analyzis {
 	return Analyzis{tagID, timestampFirst, timestampLast, amountOfTweets, amountOfNews, reactionAvg, reactionTweets, reactionNews}
 }
 
@@ -40,7 +43,7 @@ type Tag struct {
 func NewTag(name, provider, additionalInfo string) Tag {
 	return Tag{0, name, provider, additionalInfo}
 }
-func initDb(db_connection string) (*sql.DB, error) {
+func InitDb(db_connection string) (*sql.DB, error) {
 	db, err := sql.Open("mysql",
 		db_connection+"?parseTime=true")
 
@@ -77,7 +80,7 @@ func initDb(db_connection string) (*sql.DB, error) {
 	return db, nil
 }
 
-func (env Env) createTag(tag Tag) error {
+func (env Env) CreateTag(tag Tag) error {
 	tPresent, err := env.tagIsPresent(tag.Name)
 	if err != nil {
 		return err
@@ -93,7 +96,20 @@ func (env Env) createTag(tag Tag) error {
 	return nil
 }
 
-func (env Env) getTagID(name string) (int, error) {
+func (env Env) CreateTagIfNotPresent(tag Tag) error {
+	tPresent, err := env.tagIsPresent(tag.Name)
+	if err != nil {
+		return err
+	}
+	if tPresent {
+		return nil
+	}
+	err = env.CreateTag(tag)
+	return err
+
+}
+
+func (env Env) GetTagID(name string) (int, error) {
 	tags, err := env.getTags(name)
 	if err != nil {
 		return -1, err
@@ -143,7 +159,7 @@ func (env Env) createAnalyzis(a Analyzis) error {
 }
 
 func (env Env) getAnalyzes(tagName string, timestampFirst, timestampLast time.Time) ([]Analyzis, error) {
-	tagID, err := env.getTagID(tagName)
+	tagID, err := env.GetTagID(tagName)
 	if err != nil {
 		return nil, err
 	}

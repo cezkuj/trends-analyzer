@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -14,6 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/cezkuj/trends-analyzer/analyzer"
+	"github.com/cezkuj/trends-analyzer/db"
 )
 
 type DbCfg struct {
@@ -28,24 +28,25 @@ func NewDbCfg(user, pass, host, name string) DbCfg {
 }
 
 func StartServer(dbCfg DbCfg, twitterApiKey, newsApiKey string, prod bool) {
-	db, err := initDb(dbCfg.user + ":" + dbCfg.pass + "@tcp(" + dbCfg.host + ")/" + dbCfg.name)
+	database, err := db.InitDb(dbCfg.user + ":" + dbCfg.pass + "@tcp(" + dbCfg.host + ")/" + dbCfg.name)
 	if err != nil {
 		log.Fatal(err)
 	}
-	env := Env{db: db, twitterApiKey: twitterApiKey, newsApiKey: newsApiKey}
+	env := db.NewEnv(database, twitterApiKey, newsApiKey)
 	if prod {
 		startProdServer(env)
 	}
 	startDevServer(env)
 }
 
-func scrap(env Env) func(w http.ResponseWriter, r *http.Request) {
+func scrap(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		decoder := json.NewDecoder(r.Body)
 		var dat map[string]string
 		err := decoder.Decode(&dat)
 		if err != nil {
-			log.Println(err)
+			w.WriteHeader(http.StatusBadRequest)
+			log.Error(err)
 			return
 		}
 		keyword, present := dat["keyword"]
@@ -71,33 +72,44 @@ func scrap(env Env) func(w http.ResponseWriter, r *http.Request) {
 			io.WriteString(w, fmt.Sprintf("Country %v not supported", country))
 			return
 		}
-		provider, present := dat["provider"]
+
+		tagProvider, present := dat["tagProvider"]
 		if !present {
-			provider = "both"
+			tagProvider = "unknown"
 		}
-		switch provider {
-		case "twitter":
-			go analyzer.AnalyzeTwitter(keyword, country, date, env.twitterApiKey)
-		case "news":
-			go analyzer.AnalyzeNews(keyword, country, date, env.newsApiKey)
-		case "both":
-			go analyzer.AnalyzeTwitter(keyword, country, date, env.twitterApiKey)
-			go analyzer.AnalyzeNews(keyword, country, date, env.newsApiKey)
-		default:
+		tag := db.NewTag(keyword, tagProvider, "")
+		err = env.CreateTag(tag)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			log.Error(err)
+			return
+		}
+		tagID, err := env.GetTagID(tag.Name)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			log.Error(err)
+			return
+		}
+		textProvider, present := dat["textProvider"]
+		if !present {
+			textProvider = "both"
+		}
+                if textProvider != "both" && textProvider != "twitter" && textProvider != "news" {
 			w.WriteHeader(http.StatusBadRequest)
 			io.WriteString(w, "Provider not recognized.")
 		}
+                go analyzer.Analyze(env, keyword, textProvider, country, date, tagID)
 	}
 }
 
-func status(env Env) func(w http.ResponseWriter, r *http.Request) {
+func status(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, "showing all statuses.")
 	}
 
 }
 
-func startProdServer(env Env) {
+func startProdServer(env db.Env) {
 	m := &autocert.Manager{
 		Cache:      autocert.DirCache(".secret"),
 		Prompt:     autocert.AcceptTOS,
@@ -138,7 +150,7 @@ func startProdServer(env Env) {
 	log.Println(srvTLS.ListenAndServeTLS("", ""))
 
 }
-func startDevServer(env Env) {
+func startDevServer(env db.Env) {
 	serveMux := createServeMux(env)
 	srv := &http.Server{
 		Addr:         ":8000",
@@ -149,7 +161,7 @@ func startDevServer(env Env) {
 	}
 	log.Println(srv.ListenAndServe())
 }
-func createServeMux(env Env) *http.ServeMux {
+func createServeMux(env db.Env) *http.ServeMux {
 	router := mux.NewRouter()
 	apiRouter := router.PathPrefix("/api").Subrouter()
 	apiRouter.HandleFunc("/scrap", scrap(env)).Methods("POST")
@@ -157,12 +169,4 @@ func createServeMux(env Env) *http.ServeMux {
 	serveMux := &http.ServeMux{}
 	serveMux.Handle("/", router)
 	return serveMux
-}
-
-func parseReaderToJson(reader io.Reader) (map[string]string, error) {
-	var dat map[string]string
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(reader)
-	err := json.Unmarshal(buf.Bytes(), &dat)
-	return dat, err
 }
