@@ -3,28 +3,28 @@ package analyzer
 import (
 	"crypto/tls"
 	"net/http"
+	"sync"
 	"time"
-        "sync"
 
 	language "cloud.google.com/go/language/apiv1"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	languagepb "google.golang.org/genproto/googleapis/cloud/language/v1"
-        log "github.com/sirupsen/logrus"
 
-        "github.com/cezkuj/trends-analyzer/db"
+	"github.com/cezkuj/trends-analyzer/db"
 )
 
 type text struct {
-	id        int
-	text      string
-        textProvider string
-	timestamp time.Time
+	id           int
+	text         string
+	textProvider string
+	timestamp    time.Time
 }
 
-type analyzedText struct{
-     reaction float32
-     textProvider string
-     timestamp time.Time
+type analyzedText struct {
+	reaction     float32
+	textProvider string
+	timestamp    time.Time
 }
 
 func clientWithTimeout(tlsSecure bool) (client http.Client) {
@@ -38,64 +38,70 @@ func clientWithTimeout(tlsSecure bool) (client http.Client) {
 }
 
 func Analyze(env db.Env, keyword, textProvider, country, date string, tagID int) {
-       tt := []text{}
-       if textProvider == "twitter" || textProvider == "both" {
-            tweets, err := getTweets(keyword, country, date, env.TwitterApiKey)
-            if err != nil {
-                log.Error(err)
-                return 
-            }
-            tt = append(tt, tweets...)
-       }
-       if textProvider == "news" || textProvider == "both" {
-            nn, err := getNews(keyword, country, date, env.NewsApiKey)
-            if err != nil {
-                log.Error(err)
-                return
-            }
-            tt = append(tt, nn...)
-       }
-       c := make(chan analyzedText)
-       wg := new(sync.WaitGroup)
-       
-       for _, t := range tt {
-	  wg.Add(1)
-          go analyzeText(t, c, wg)
-       }
-       go func(){
-          wg.Wait()
-          close(c)
-          
-       }()
-       var timestampFirst time.Time
-       var timestampLast time.Time
-       stats := map[string]int{}
-       sums := map[string]float32{}
-       for t := range c {
-           log.Debug(t)
-           stats[t.textProvider] += 1
-           sums[t.textProvider] += t.reaction
-           if t.timestamp.After(timestampLast) {
-               timestampLast = t.timestamp
-           }
-           if t.timestamp.Before(timestampFirst) {
-               timestampFirst = t.timestamp
-           }
-           log.Debug(timestampFirst, timestampLast, stats, sums)
-       }
-       
+	tt := []text{}
+	if textProvider == "twitter" || textProvider == "both" {
+		tweets, err := getTweets(keyword, country, date, env.TwitterApiKey)
+		if err != nil {
+			log.Error(err)
+			return
+		}
+		tt = append(tt, tweets...)
+	}
+	if textProvider == "news" || textProvider == "both" {
+		nn, err := getNews(keyword, country, date, env.NewsApiKey)
+		if err != nil {
+			log.Error(err)
+			return
+		}
+		tt = append(tt, nn...)
+	}
+	c := make(chan analyzedText)
+	wg := new(sync.WaitGroup)
 
+	for _, t := range tt {
+		wg.Add(1)
+		go analyzeText(t, c, wg)
+	}
+	go func() {
+		wg.Wait()
+		close(c)
+
+	}()
+	var timestampFirst time.Time
+	var timestampLast time.Time
+	stats := map[string]int{}
+	sums := map[string]float32{}
+	for t := range c {
+		log.Debug(t)
+		stats[t.textProvider] += 1
+		sums[t.textProvider] += t.reaction
+		if t.timestamp.After(timestampLast) {
+			timestampLast = t.timestamp
+		}
+		if t.timestamp.Before(timestampFirst) {
+			timestampFirst = t.timestamp
+		}
+		log.Debug(timestampFirst, timestampLast, stats, sums)
+	}
+	reactionTweets := sums["twitter"] / float32(stats["twitter"])
+	reactionNews := sums["news"] / float32(stats["news"])
+	reactionAvg := (sums["twitter"] + sums["news"]) / float32(stats["twitter"] + stats["news"])
+	analyzis := db.NewAnalyzis(tagID, timestampFirst, timestampLast, stats["twitter"], stats["news"], reactionAvg, reactionTweets, reactionNews)
+	err := env.CreateAnalyzis(analyzis)
+	if err != nil {
+		log.Error(err)
+
+	}
 
 }
-func analyzeText(t text, c chan analyzedText, wg *sync.WaitGroup){
-     defer wg.Done()
-     s, err := analyzeSentiment(t.text)
-     if err != nil {
-        log.Error(err)
-        return 
-     }
-     c <- analyzedText{s, t.textProvider, t.timestamp}
-     
+func analyzeText(t text, c chan analyzedText, wg *sync.WaitGroup) {
+	defer wg.Done()
+	s, err := analyzeSentiment(t.text)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	c <- analyzedText{s, t.textProvider, t.timestamp}
 
 }
 func analyzeSentiment(text string) (float32, error) {

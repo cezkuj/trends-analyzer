@@ -29,6 +29,7 @@ type Analyzis struct {
 	ReactionTweets float32
 	ReactionNews   float32
 }
+
 func NewAnalyzis(tagID int, timestampFirst, timestampLast time.Time, amountOfTweets, amountOfNews int, reactionAvg, reactionTweets, reactionNews float32) Analyzis {
 	return Analyzis{tagID, timestampFirst, timestampLast, amountOfTweets, amountOfNews, reactionAvg, reactionTweets, reactionNews}
 }
@@ -149,7 +150,7 @@ func (env Env) tagIsPresent(name string) (bool, error) {
 	return false, nil
 }
 
-func (env Env) createAnalyzis(a Analyzis) error {
+func (env Env) CreateAnalyzis(a Analyzis) error {
 	_, err := env.db.Exec("INSERT INTO analyzes (tag_id, timestamp_first, timestamp_last, amount_of_tweets, amount_of_news, reaction_avg, reaction_tweets, reaction_news) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", a.TagID, a.TimestampFirst, a.TimestampLast, a.AmountOfTweets, a.AmountOfNews, a.ReactionAvg, a.ReactionTweets, a.ReactionNews)
 	if err != nil {
 		return err

@@ -94,11 +94,11 @@ func scrap(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 		if !present {
 			textProvider = "both"
 		}
-                if textProvider != "both" && textProvider != "twitter" && textProvider != "news" {
+		if textProvider != "both" && textProvider != "twitter" && textProvider != "news" {
 			w.WriteHeader(http.StatusBadRequest)
 			io.WriteString(w, "Provider not recognized.")
 		}
-                go analyzer.Analyze(env, keyword, textProvider, country, date, tagID)
+		go analyzer.Analyze(env, keyword, textProvider, country, date, tagID)
 	}
 }
 
