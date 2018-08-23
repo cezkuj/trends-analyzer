@@ -1,12 +1,15 @@
 package analyzer
 
 import (
-	"testing"
-
 	log "github.com/sirupsen/logrus"
+	"testing"
 )
 
-func TestAnalyzeText(t *testing.T) {
+func TestAnalyzeSentiment(t *testing.T) {
 	log.SetLevel(log.DebugLevel)
-	analyzeText(text{}, "")
+	sent, err := analyzeSentiment("I am happy.")
+	if err != nil {
+		t.Fatal(err)
+	}
+	log.Debug(sent)
 }

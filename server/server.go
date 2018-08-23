@@ -78,7 +78,7 @@ func scrap(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 			tagProvider = "unknown"
 		}
 		tag := db.NewTag(keyword, tagProvider, "")
-		err = env.CreateTag(tag)
+		err = env.CreateTagIfNotPresent(tag)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			log.Error(err)

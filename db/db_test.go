@@ -11,7 +11,7 @@ const (
 )
 
 func truncateTable(table_name string) {
-	db, err := initDb(DB_CONNECTION)
+	db, err := InitDb(DB_CONNECTION)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -27,13 +27,13 @@ func TestTagIsNotPresent(t *testing.T) {
 	if present {
 		t.Fatal(err)
 	}
-
+	cleanUp()
 }
 
 func TestTagIsPresent(t *testing.T) {
 	env := setupEnv()
 	tag := NewTag("trend", "", "")
-	err := env.createTag(tag)
+	err := env.CreateTag(tag)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -44,13 +44,13 @@ func TestTagIsPresent(t *testing.T) {
 	if !present {
 		t.Fatal("Tag is not present")
 	}
-
+	cleanUp()
 }
 
 func TestGetTags(t *testing.T) {
 	env := setupEnv()
 	tag1 := NewTag("trends1", "", "")
-	err := env.createTag(tag1)
+	err := env.CreateTag(tag1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,39 +58,40 @@ func TestGetTags(t *testing.T) {
 	if tags[0].Name != tag1.Name {
 		t.Fatal("Tags name not equal")
 	}
-
+	cleanUp()
 }
 
 func TestGetTagID(t *testing.T) {
 	env := setupEnv()
 	tag1 := NewTag("trends1", "", "")
 	tag2 := NewTag("trends2", "", "")
-	err := env.createTag(tag1)
+	err := env.CreateTag(tag1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = env.createTag(tag2)
+	err = env.CreateTag(tag2)
 	if err != nil {
 		t.Fatal(err)
 	}
-	id, err := env.getTagID("trends2")
+	id, err := env.GetTagID("trends2")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if id != 2 {
 		t.Fatal("ID has unexpected value")
 	}
+	cleanUp()
 
 }
 
 func TestGetAnalyzes(t *testing.T) {
 	env := setupEnv()
 	tag1 := NewTag("trends1", "", "")
-	err := env.createTag(tag1)
+	err := env.CreateTag(tag1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	tag_id, err := env.getTagID(tag1.Name)
+	tag_id, err := env.GetTagID(tag1.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -100,11 +101,11 @@ func TestGetAnalyzes(t *testing.T) {
 		time.Date(2012, 1, 1, 12, 0, 0, 0, time.UTC),
 		0,
 		0,
-		float64(0.0),
-		float64(0.0),
-		float64(0.0),
+		float32(0.0),
+		float32(0.0),
+		float32(0.0),
 	)
-	err = env.createAnalyzis(a1)
+	err = env.CreateAnalyzis(a1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,11 +115,11 @@ func TestGetAnalyzes(t *testing.T) {
 		time.Date(2015, 1, 1, 12, 0, 0, 0, time.UTC),
 		0,
 		0,
-		float64(0.0),
-		float64(0.0),
-		float64(0.0),
+		float32(0.0),
+		float32(0.0),
+		float32(0.0),
 	)
-	err = env.createAnalyzis(a2)
+	err = env.CreateAnalyzis(a2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,10 +139,11 @@ func TestGetAnalyzes(t *testing.T) {
 	if a1 != analyzes[0] {
 		t.Fatal("Wrong analyzes in 2009-2012 query")
 	}
+	cleanUp()
 
 }
 func setupEnv() Env {
-	db, err := initDb(DB_CONNECTION)
+	db, err := InitDb(DB_CONNECTION)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -149,5 +151,11 @@ func setupEnv() Env {
 	truncateTable("analyzes")
 	log.SetLevel(log.DebugLevel)
 	return Env{db: db}
+
+}
+
+func cleanUp() {
+	truncateTable("tags")
+	truncateTable("analyzes")
 
 }
