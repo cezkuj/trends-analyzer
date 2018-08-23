@@ -14,7 +14,8 @@ func TestGetTweets(t *testing.T) {
 	if twitterApiKey == "" {
 		t.Fatal("TwitterApiKey not set")
 	}
-	_, err := getTweets("Trump", "any", "any", twitterApiKey)
+	tweets, err := getTweets("Trump", "any", "any", twitterApiKey)
+	log.Debug(tweets)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -10,13 +10,14 @@ import (
 )
 
 type twitterApi struct {
-	Statuses []status `json: "statuses"`
+	Statuses []status `json:"statuses"`
 }
 
 type status struct {
-	CreatedAt time.Time `json: "created_at"`
-	Id        int       `json: "id"`
-	Text      string    `json: "text"`
+	//json decoding does not work for anything else than RFC 3339 format - decoding to string first
+	CreatedAt string `json:"created_at"`
+	Id        int    `json:"id"`
+	Text      string `json:"text"`
 }
 
 func getTweets(keyword, lang, date, twitterApiKey string) ([]text, error) {
@@ -46,10 +47,15 @@ func getTweets(keyword, lang, date, twitterApiKey string) ([]text, error) {
 		return nil, err
 	}
 	for _, s := range tA.Statuses {
+		parsedTimestamp, err := time.Parse(time.RubyDate, s.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
 		t := text{
-			id:        s.Id,
-			text:      s.Text,
-			timestamp: s.CreatedAt,
+			id:           s.Id,
+			text:         s.Text,
+			timestamp:    parsedTimestamp,
+			textProvider: "twitter",
 		}
 		log.Debug(t)
 		tt = append(tt, t)

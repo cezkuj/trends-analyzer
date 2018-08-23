@@ -17,9 +17,9 @@ type newsApi struct {
 }
 
 type article struct {
-	Title       string    `json: "title"`
-	Description string    `json: "description"`
-	PublishedAt time.Time `json: "publishedAt"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	PublishedAt time.Time `json:"publishedAt"`
 }
 
 func getNews(keyword, country, date, newsApiKey string) ([]text, error) {
@@ -49,9 +49,10 @@ func getNews(keyword, country, date, newsApiKey string) ([]text, error) {
 		txt := fmt.Sprintf("%v %v", a.Title, a.Description)
 		id := hash(txt)
 		t := text{
-			id:        id,
-			text:      txt,
-			timestamp: a.PublishedAt,
+			id:           id,
+			text:         txt,
+			timestamp:    a.PublishedAt,
+			textProvider: "news",
 		}
 		log.Debug(t)
 		tt = append(tt, t)

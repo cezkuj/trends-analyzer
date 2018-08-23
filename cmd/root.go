@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	"github.com/cezkuj/trends-analyzer/server"
@@ -17,6 +18,7 @@ var (
 	prod          bool
 	twitterApiKey string
 	newsApiKey    string
+	verbose       bool
 )
 
 var rootCmd = &cobra.Command{
@@ -31,6 +33,9 @@ var rootCmd = &cobra.Command{
 }
 
 func startServer(cmd *cobra.Command, args []string) {
+	if verbose {
+		log.SetLevel(log.DebugLevel)
+	}
 	dbCfg := server.NewDbCfg(dbUser, dbPass, dbHost, dbName)
 	server.StartServer(dbCfg, twitterApiKey, newsApiKey, prod)
 
@@ -56,4 +61,5 @@ func init() {
 	rootCmd.Flags().StringVarP(&dbName, "name", "d", "", "Sets name for database conneciton, required")
 	rootCmd.MarkFlagRequired("name")
 	rootCmd.Flags().BoolVarP(&prod, "prod", "r", false, "Sets production mode with tls enabled. Default value is false.")
+	rootCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Sets logs to DEBUG level.")
 }
