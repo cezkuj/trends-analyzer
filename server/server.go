@@ -109,6 +109,78 @@ func status(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func tags(env db.Env) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		tags, err := env.GetTags()
+		if err != nil {
+			log.Error(err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		tagsJSON, err := json.Marshal(tags)
+		if err != nil {
+			log.Error(err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		w.Write(tagsJSON)
+	}
+
+}
+
+func analyzes(env db.Env) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		//Declaring variables beforehand, to bypass scoping problems with if - to refactor later on
+		var timestampFirst time.Time
+		var timestampLast time.Time
+		var err error
+		values := r.URL.Query()
+		name := values.Get("name")
+		if name == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			io.WriteString(w, "name parameter is missing")
+			return
+		}
+		if timeFstr := values.Get("timestamp_first"); timeFstr != "" {
+			timestampFirst, err = time.Parse(time.RFC3339, timeFstr)
+			if err != nil {
+				log.Error(err)
+				w.WriteHeader(http.StatusBadRequest)
+				return
+
+			}
+
+		} else {
+			timestampFirst = time.Time{}
+		}
+		if timeLstr := values.Get("timestamp_last"); timeLstr != "" {
+			timestampLast, err = time.Parse(time.RFC3339, timeLstr)
+			if err != nil {
+				log.Error(err)
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+		} else {
+			timestampLast = time.Now()
+		}
+		analyzes, err := env.GetAnalyzes(name, timestampFirst, timestampLast)
+		if err != nil {
+			log.Error(err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		analyzesJSON, err := json.Marshal(analyzes)
+		if err != nil {
+			log.Error(err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		w.Write(analyzesJSON)
+	}
+
+}
+
 func startProdServer(env db.Env) {
 	m := &autocert.Manager{
 		Cache:      autocert.DirCache(".secret"),
@@ -166,6 +238,8 @@ func createServeMux(env db.Env) *http.ServeMux {
 	apiRouter := router.PathPrefix("/api").Subrouter()
 	apiRouter.HandleFunc("/scrap", scrap(env)).Methods("POST")
 	apiRouter.HandleFunc("/status", status(env)).Methods("GET")
+	apiRouter.HandleFunc("/tags", tags(env)).Methods("GET")
+	apiRouter.HandleFunc("/analyzes", analyzes(env)).Methods("GET")
 	serveMux := &http.ServeMux{}
 	serveMux.Handle("/", router)
 	return serveMux

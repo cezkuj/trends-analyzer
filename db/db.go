@@ -20,14 +20,14 @@ func NewEnv(db *sql.DB, twitterApiKey, newsApiKey string) Env {
 }
 
 type Analyzis struct {
-	TagID          int
-	TimestampFirst time.Time
-	TimestampLast  time.Time
-	AmountOfTweets int
-	AmountOfNews   int
-	ReactionAvg    float32
-	ReactionTweets float32
-	ReactionNews   float32
+	TagID          int       `json:"tag_id"`
+	TimestampFirst time.Time `json:"timestamp_first"`
+	TimestampLast  time.Time `json:"timestamp_last"`
+	AmountOfTweets int       `json:"amount_of_tweets"`
+	AmountOfNews   int       `json:"amount_of_news"`
+	ReactionAvg    float32   `json:"reaction_avg"`
+	ReactionTweets float32   `json:"reaction_tweets"`
+	ReactionNews   float32   `json:"reaction_news"`
 }
 
 func NewAnalyzis(tagID int, timestampFirst, timestampLast time.Time, amountOfTweets, amountOfNews int, reactionAvg, reactionTweets, reactionNews float32) Analyzis {
@@ -35,10 +35,10 @@ func NewAnalyzis(tagID int, timestampFirst, timestampLast time.Time, amountOfTwe
 }
 
 type Tag struct {
-	ID             int
-	Name           string
-	Provider       string
-	AdditionalInfo string
+	ID             int    `json:"id"`
+	Name           string `json:"name"`
+	Provider       string `json:"provider"`
+	AdditionalInfo string `json:"additional_info"`
 }
 
 func NewTag(name, provider, additionalInfo string) Tag {
@@ -111,7 +111,7 @@ func (env Env) CreateTagIfNotPresent(tag Tag) error {
 }
 
 func (env Env) GetTagID(name string) (int, error) {
-	tags, err := env.getTags(name)
+	tags, err := env.GetTagsWithName(name)
 	if err != nil {
 		return -1, err
 	}
@@ -121,9 +121,17 @@ func (env Env) GetTagID(name string) (int, error) {
 	return tags[0].ID, nil
 
 }
-func (env Env) getTags(name string) ([]Tag, error) {
+func (env Env) GetTagsWithName(name string) ([]Tag, error) {
+	return env.getTags("SELECT * FROM tags where name=?", name)
+}
+
+func (env Env) GetTags() ([]Tag, error) {
+	return env.getTags("SELECT * FROM tags")
+}
+
+func (env Env) getTags(query string, args ...interface{}) ([]Tag, error) {
 	tags := []Tag{}
-	rows, err := env.db.Query("SELECT * FROM tags where name=?", name)
+	rows, err := env.db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -137,10 +145,10 @@ func (env Env) getTags(name string) ([]Tag, error) {
 	}
 	log.Debug(tags)
 	return tags, nil
-
 }
+
 func (env Env) tagIsPresent(name string) (bool, error) {
-	tags, err := env.getTags(name)
+	tags, err := env.GetTagsWithName(name)
 	if err != nil {
 		return false, err
 	}
@@ -159,7 +167,7 @@ func (env Env) CreateAnalyzis(a Analyzis) error {
 	return nil
 }
 
-func (env Env) getAnalyzes(tagName string, timestampFirst, timestampLast time.Time) ([]Analyzis, error) {
+func (env Env) GetAnalyzes(tagName string, timestampFirst, timestampLast time.Time) ([]Analyzis, error) {
 	tagID, err := env.GetTagID(tagName)
 	if err != nil {
 		return nil, err
