@@ -67,8 +67,6 @@ func Analyze(env db.Env, keyword, textProvider, country, date string, tagID int)
 		close(c)
 
 	}()
-	var timestampFirst time.Time
-	var timestampLast time.Time
 	stats := map[string]int{}
 	sums := map[string]float32{}
 	reactionTweets := float32(0)
@@ -77,13 +75,6 @@ func Analyze(env db.Env, keyword, textProvider, country, date string, tagID int)
 	for t := range c {
 		stats[t.textProvider] += 1
 		sums[t.textProvider] += t.reaction
-		log.Debug(timestampFirst, timestampLast, t.timestamp)
-		if t.timestamp.After(timestampLast) {
-			timestampLast = t.timestamp
-		}
-		if timestampFirst.Before(time.Date(1000, time.January, 0, 0, 0, 0, 0, time.UTC)) || t.timestamp.Before(timestampFirst) {
-			timestampFirst = t.timestamp
-		}
 	}
 	if stats["twitter"] > 0 {
 		reactionTweets = sums["twitter"] / float32(stats["twitter"])
@@ -96,7 +87,7 @@ func Analyze(env db.Env, keyword, textProvider, country, date string, tagID int)
 	if stats["twitter"] > 0 && stats["news"] > 0 {
 		reactionAvg = (sums["twitter"] + sums["news"]) / float32(stats["twitter"]+stats["news"])
 	}
-	analyzis := db.NewAnalyzis(tagID, timestampFirst, timestampLast, stats["twitter"], stats["news"], reactionAvg, reactionTweets, reactionNews)
+	analyzis := db.NewAnalyzis(tagID, time.Now(), stats["twitter"], stats["news"], reactionAvg, reactionTweets, reactionNews)
 	err := env.CreateAnalyzis(analyzis)
 	if err != nil {
 		log.Error(err)

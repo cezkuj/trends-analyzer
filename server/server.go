@@ -131,8 +131,8 @@ func tags(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 func analyzes(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//Declaring variables beforehand, to bypass scoping problems with if - to refactor later on
-		var timestampFirst time.Time
-		var timestampLast time.Time
+		var after time.Time
+		var before time.Time
 		var err error
 		values := r.URL.Query()
 		name := values.Get("name")
@@ -141,8 +141,8 @@ func analyzes(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 			io.WriteString(w, "name parameter is missing")
 			return
 		}
-		if timeFstr := values.Get("timestamp_first"); timeFstr != "" {
-			timestampFirst, err = time.Parse(time.RFC3339, timeFstr)
+		if afterStr := values.Get("after"); afterStr != "" {
+			after, err = time.Parse(time.RFC3339, afterStr)
 			if err != nil {
 				log.Error(err)
 				w.WriteHeader(http.StatusBadRequest)
@@ -151,10 +151,10 @@ func analyzes(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 			}
 
 		} else {
-			timestampFirst = time.Time{}
+			after = time.Time{}
 		}
-		if timeLstr := values.Get("timestamp_last"); timeLstr != "" {
-			timestampLast, err = time.Parse(time.RFC3339, timeLstr)
+		if beforeStr := values.Get("before"); beforeStr != "" {
+			before, err = time.Parse(time.RFC3339, beforeStr)
 			if err != nil {
 				log.Error(err)
 				w.WriteHeader(http.StatusBadRequest)
@@ -162,9 +162,9 @@ func analyzes(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 			}
 
 		} else {
-			timestampLast = time.Now()
+			before = time.Now()
 		}
-		analyzes, err := env.GetAnalyzes(name, timestampFirst, timestampLast)
+		analyzes, err := env.GetAnalyzes(name, after, before)
 		if err != nil {
 			log.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
