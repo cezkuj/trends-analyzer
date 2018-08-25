@@ -97,6 +97,7 @@ func TestGetAnalyzes(t *testing.T) {
 	}
 	a1 := NewAnalyzis(
 		tag_id,
+		"us",
 		time.Date(2009, 1, 1, 12, 0, 0, 0, time.UTC),
 		0,
 		0,
@@ -110,6 +111,7 @@ func TestGetAnalyzes(t *testing.T) {
 	}
 	a2 := NewAnalyzis(
 		tag_id,
+		"us",
 		time.Date(2013, 1, 1, 12, 0, 0, 0, time.UTC),
 		0,
 		0,

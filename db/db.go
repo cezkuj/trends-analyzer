@@ -21,6 +21,7 @@ func NewEnv(db *sql.DB, twitterApiKey, newsApiKey string) Env {
 
 type Analyzis struct {
 	TagID          int       `json:"tag_id"`
+	Country        string    `json:"country"`
 	Timestamp      time.Time `json:"timestamp"`
 	AmountOfTweets int       `json:"amount_of_tweets"`
 	AmountOfNews   int       `json:"amount_of_news"`
@@ -29,8 +30,8 @@ type Analyzis struct {
 	ReactionNews   float32   `json:"reaction_news"`
 }
 
-func NewAnalyzis(tagID int, timestamp time.Time, amountOfTweets, amountOfNews int, reactionAvg, reactionTweets, reactionNews float32) Analyzis {
-	return Analyzis{tagID, timestamp, amountOfTweets, amountOfNews, reactionAvg, reactionTweets, reactionNews}
+func NewAnalyzis(tagID int, country string, timestamp time.Time, amountOfTweets, amountOfNews int, reactionAvg, reactionTweets, reactionNews float32) Analyzis {
+	return Analyzis{tagID, country, timestamp, amountOfTweets, amountOfNews, reactionAvg, reactionTweets, reactionNews}
 }
 
 type Tag struct {
@@ -54,6 +55,7 @@ func InitDb(db_connection string) (*sql.DB, error) {
           CREATE TABLE IF NOT EXISTS analyzes (
           id SERIAL NOT NULL PRIMARY KEY,
           tag_id INT NOT NULL,
+          country TEXT NOT NULL,
           timestamp DATETIME NOT NULL,
           amount_of_tweets INT NOT NULL,
           amount_of_news INT NOT NULL,
@@ -157,7 +159,7 @@ func (env Env) tagIsPresent(name string) (bool, error) {
 }
 
 func (env Env) CreateAnalyzis(a Analyzis) error {
-	_, err := env.db.Exec("INSERT INTO analyzes (tag_id, timestamp, amount_of_tweets, amount_of_news, reaction_avg, reaction_tweets, reaction_news) VALUES (?, ?, ?, ?, ?, ?, ?)", a.TagID, a.Timestamp, a.AmountOfTweets, a.AmountOfNews, a.ReactionAvg, a.ReactionTweets, a.ReactionNews)
+	_, err := env.db.Exec("INSERT INTO analyzes (tag_id, country, timestamp, amount_of_tweets, amount_of_news, reaction_avg, reaction_tweets, reaction_news) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", a.TagID, a.Country, a.Timestamp, a.AmountOfTweets, a.AmountOfNews, a.ReactionAvg, a.ReactionTweets, a.ReactionNews)
 	if err != nil {
 		return err
 	}
@@ -171,14 +173,14 @@ func (env Env) GetAnalyzes(tagName string, after, before time.Time) ([]Analyzis,
 		return nil, err
 	}
 	analyzes := []Analyzis{}
-	rows, err := env.db.Query("SELECT tag_id, timestamp, amount_of_tweets, amount_of_news, reaction_avg, reaction_tweets, reaction_news FROM analyzes WHERE tag_id=? AND timestamp >=? AND timestamp <=?", tagID, after, before)
+	rows, err := env.db.Query("SELECT tag_id, country, timestamp, amount_of_tweets, amount_of_news, reaction_avg, reaction_tweets, reaction_news FROM analyzes WHERE tag_id=? AND timestamp >=? AND timestamp <=?", tagID, after, before)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	for i := 0; rows.Next(); i++ {
 		a := Analyzis{}
-		if err := rows.Scan(&a.TagID, &a.Timestamp, &a.AmountOfTweets, &a.AmountOfNews, &a.ReactionAvg, &a.ReactionTweets, &a.ReactionNews); err != nil {
+		if err := rows.Scan(&a.TagID, &a.Country, &a.Timestamp, &a.AmountOfTweets, &a.AmountOfNews, &a.ReactionAvg, &a.ReactionTweets, &a.ReactionNews); err != nil {
 			return nil, err
 		}
 		analyzes = append(analyzes, a)

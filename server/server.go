@@ -39,7 +39,7 @@ func StartServer(dbCfg DbCfg, twitterApiKey, newsApiKey string, prod bool) {
 	startDevServer(env)
 }
 
-func scrap(env db.Env) func(w http.ResponseWriter, r *http.Request) {
+func analyze(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		decoder := json.NewDecoder(r.Body)
 		var dat map[string]string
@@ -236,7 +236,7 @@ func startDevServer(env db.Env) {
 func createServeMux(env db.Env) *http.ServeMux {
 	router := mux.NewRouter()
 	apiRouter := router.PathPrefix("/api").Subrouter()
-	apiRouter.HandleFunc("/scrap", scrap(env)).Methods("POST")
+	apiRouter.HandleFunc("/analyze", analyze(env)).Methods("POST")
 	apiRouter.HandleFunc("/status", status(env)).Methods("GET")
 	apiRouter.HandleFunc("/tags", tags(env)).Methods("GET")
 	apiRouter.HandleFunc("/analyzes", analyzes(env)).Methods("GET")
