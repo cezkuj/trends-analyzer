@@ -164,7 +164,11 @@ func analyzes(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 		} else {
 			before = time.Now()
 		}
-		analyzes, err := env.GetAnalyzes(name, after, before)
+		country := values.Get("country")
+		if country == "" {
+			country = "any"
+		}
+		analyzes, err := env.GetAnalyzes(name, after, before, country)
 		if err != nil {
 			log.Error(err)
 			w.WriteHeader(http.StatusBadRequest)

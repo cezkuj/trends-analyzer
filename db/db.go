@@ -167,13 +167,9 @@ func (env Env) CreateAnalyzis(a Analyzis) error {
 	return nil
 }
 
-func (env Env) GetAnalyzes(tagName string, after, before time.Time) ([]Analyzis, error) {
-	tagID, err := env.GetTagID(tagName)
-	if err != nil {
-		return nil, err
-	}
+func (env Env) getAnalyzes(query string, args ...interface{}) ([]Analyzis, error) {
 	analyzes := []Analyzis{}
-	rows, err := env.db.Query("SELECT tag_id, country, timestamp, amount_of_tweets, amount_of_news, reaction_avg, reaction_tweets, reaction_news FROM analyzes WHERE tag_id=? AND timestamp >=? AND timestamp <=?", tagID, after, before)
+	rows, err := env.db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -191,4 +187,16 @@ func (env Env) GetAnalyzes(tagName string, after, before time.Time) ([]Analyzis,
 	}
 	log.Debug(analyzes)
 	return analyzes, nil
+}
+
+func (env Env) GetAnalyzes(tagName string, after, before time.Time, country string) ([]Analyzis, error) {
+	tagID, err := env.GetTagID(tagName)
+	if err != nil {
+		return nil, err
+	}
+	if country == "any" {
+		return env.getAnalyzes("SELECT tag_id, country, timestamp, amount_of_tweets, amount_of_news, reaction_avg, reaction_tweets, reaction_news FROM analyzes WHERE tag_id=? AND timestamp >=? AND timestamp <=?", tagID, after, before)
+	}
+	return env.getAnalyzes("SELECT tag_id, country, timestamp, amount_of_tweets, amount_of_news, reaction_avg, reaction_tweets, reaction_news FROM analyzes WHERE tag_id=? AND timestamp >=? AND timestamp <=? AND country=?", tagID, after, before, country)
+
 }
