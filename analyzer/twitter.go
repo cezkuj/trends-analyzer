@@ -30,7 +30,7 @@ func getTweets(keyword, lang, date, twitterApiKey string) ([]text, error) {
 		}
 		langParam = fmt.Sprintf("&lang=%v", lang)
 	}
-	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.twitter.com/1.1/search/tweets.json?q=%v%v", keyword, langParam), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.twitter.com/1.1/search/tweets.json?q=%v%v&count=100", keyword, langParam), nil)
 	if err != nil {
 		return nil, err
 	}
