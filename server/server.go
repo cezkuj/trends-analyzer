@@ -49,8 +49,12 @@ func analyze(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 			log.Error(err)
 			return
 		}
-		vars := mux.Vars(r)
-		keyword := vars["keyword"]
+                keyword, present := dat["keyword"]
+		if !present {
+			w.WriteHeader(http.StatusBadRequest)
+			io.WriteString(w, "Keyword not present")
+			return
+		}
 		date, present := dat["date"]
 		if !present {
 			date = "any"
@@ -263,7 +267,7 @@ func startDevServer(env db.Env) {
 func createServeMux(env db.Env) *http.ServeMux {
 	router := mux.NewRouter()
 	apiRouter := router.PathPrefix("/api").Subrouter()
-	apiRouter.HandleFunc("/analyze/{keyword}", analyze(env)).Methods("POST")
+	apiRouter.HandleFunc("/analyze", analyze(env)).Methods("POST")
 	apiRouter.HandleFunc("/status", status(env)).Methods("GET")
 	apiRouter.HandleFunc("/keywords", keywords(env)).Methods("GET")
 	apiRouter.HandleFunc("/analyzes/{keyword}", analyzes(env)).Methods("GET")
