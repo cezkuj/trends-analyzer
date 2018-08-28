@@ -20,7 +20,7 @@ func NewEnv(db *sql.DB, twitterApiKey, newsApiKey string) Env {
 }
 
 type Analyzis struct {
-	KeywordID          int       `json:"keyword_id"`
+	KeywordID      int       `json:"keyword_id"`
 	Country        string    `json:"country"`
 	Timestamp      time.Time `json:"timestamp"`
 	AmountOfTweets int       `json:"amount_of_tweets"`

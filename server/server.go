@@ -49,12 +49,8 @@ func analyze(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 			log.Error(err)
 			return
 		}
-		keyword, present := dat["keyword"]
-		if !present {
-			w.WriteHeader(http.StatusBadRequest)
-			io.WriteString(w, "Keyword not present")
-			return
-		}
+		vars := mux.Vars(r)
+		keyword := vars["keyword"]
 		date, present := dat["date"]
 		if !present {
 			date = "any"
@@ -133,13 +129,10 @@ func analyzes(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 		var after time.Time
 		var before time.Time
 		var err error
+
+		vars := mux.Vars(r)
+		keyword := vars["keyword"]
 		values := r.URL.Query()
-		name := values.Get("name")
-		if name == "" {
-			w.WriteHeader(http.StatusBadRequest)
-			io.WriteString(w, "name parameter is missing")
-			return
-		}
 		if afterStr := values.Get("after"); afterStr != "" {
 			after, err = time.Parse(time.RFC3339, afterStr)
 			if err != nil {
@@ -167,7 +160,7 @@ func analyzes(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 		if country == "" {
 			country = "any"
 		}
-		analyzes, err := env.GetAnalyzes(name, after, before, country)
+		analyzes, err := env.GetAnalyzes(keyword, after, before, country)
 		if err != nil {
 			log.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
@@ -180,6 +173,37 @@ func analyzes(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		w.Write(analyzesJSON)
+	}
+
+}
+
+func countries(env db.Env) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		keyword := vars["keyword"]
+		analyzes, err := env.GetAnalyzes(keyword, time.Time{}, time.Now(), "any")
+		if err != nil {
+			log.Error(err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		countriesSet := map[string]bool{"any": true}
+		for _, a := range analyzes {
+			countriesSet[a.Country] = true
+		}
+		countries := make([]string, len(countriesSet))
+		i := 0
+		for c := range countriesSet {
+			countries[i] = c
+			i++
+		}
+		countriesJSON, err := json.Marshal(countries)
+		if err != nil {
+			log.Error(err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		w.Write(countriesJSON)
 	}
 
 }
@@ -239,10 +263,11 @@ func startDevServer(env db.Env) {
 func createServeMux(env db.Env) *http.ServeMux {
 	router := mux.NewRouter()
 	apiRouter := router.PathPrefix("/api").Subrouter()
-	apiRouter.HandleFunc("/analyze", analyze(env)).Methods("POST")
+	apiRouter.HandleFunc("/analyze/{keyword}", analyze(env)).Methods("POST")
 	apiRouter.HandleFunc("/status", status(env)).Methods("GET")
 	apiRouter.HandleFunc("/keywords", keywords(env)).Methods("GET")
-	apiRouter.HandleFunc("/analyzes", analyzes(env)).Methods("GET")
+	apiRouter.HandleFunc("/analyzes/{keyword}", analyzes(env)).Methods("GET")
+	apiRouter.HandleFunc("/countries/{keyword}", countries(env)).Methods("GET")
 	serveMux := &http.ServeMux{}
 	serveMux.Handle("/", router)
 	return serveMux

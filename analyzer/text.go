@@ -87,11 +87,11 @@ func Analyze(env db.Env, keyword, textProvider, country, date string) {
 	if stats["twitter"] > 0 && stats["news"] > 0 {
 		reactionAvg = (sums["twitter"] + sums["news"]) / float32(stats["twitter"]+stats["news"])
 	}
-        keywordID, err := env.GetKeywordID(keyword)
-        if err != nil {
-                log.Error(err)
-                return
-        }
+	keywordID, err := env.GetKeywordID(keyword)
+	if err != nil {
+		log.Error(err)
+		return
+	}
 	analyzis := db.NewAnalyzis(keywordID, country, time.Now(), stats["twitter"], stats["news"], reactionAvg, reactionTweets, reactionNews)
 	err = env.CreateAnalyzis(analyzis)
 	if err != nil {
