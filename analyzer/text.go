@@ -37,7 +37,7 @@ func clientWithTimeout(tlsSecure bool) (client http.Client) {
 
 }
 
-func Analyze(env db.Env, keyword, textProvider, country, date string, tagID int) {
+func Analyze(env db.Env, keyword, textProvider, country, date string) {
 	tt := []text{}
 	if textProvider == "twitter" || textProvider == "both" {
 		tweets, err := getTweets(keyword, country, date, env.TwitterApiKey)
@@ -87,8 +87,13 @@ func Analyze(env db.Env, keyword, textProvider, country, date string, tagID int)
 	if stats["twitter"] > 0 && stats["news"] > 0 {
 		reactionAvg = (sums["twitter"] + sums["news"]) / float32(stats["twitter"]+stats["news"])
 	}
-	analyzis := db.NewAnalyzis(tagID, country, time.Now(), stats["twitter"], stats["news"], reactionAvg, reactionTweets, reactionNews)
-	err := env.CreateAnalyzis(analyzis)
+        keywordID, err := env.GetKeywordID(keyword)
+        if err != nil {
+                log.Error(err)
+                return
+        }
+	analyzis := db.NewAnalyzis(keywordID, country, time.Now(), stats["twitter"], stats["news"], reactionAvg, reactionTweets, reactionNews)
+	err = env.CreateAnalyzis(analyzis)
 	if err != nil {
 		log.Error(err)
 

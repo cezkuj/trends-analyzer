@@ -20,7 +20,7 @@ func NewEnv(db *sql.DB, twitterApiKey, newsApiKey string) Env {
 }
 
 type Analyzis struct {
-	TagID          int       `json:"tag_id"`
+	KeywordID          int       `json:"keyword_id"`
 	Country        string    `json:"country"`
 	Timestamp      time.Time `json:"timestamp"`
 	AmountOfTweets int       `json:"amount_of_tweets"`
@@ -30,19 +30,19 @@ type Analyzis struct {
 	ReactionNews   float32   `json:"reaction_news"`
 }
 
-func NewAnalyzis(tagID int, country string, timestamp time.Time, amountOfTweets, amountOfNews int, reactionAvg, reactionTweets, reactionNews float32) Analyzis {
-	return Analyzis{tagID, country, timestamp, amountOfTweets, amountOfNews, reactionAvg, reactionTweets, reactionNews}
+func NewAnalyzis(keywordID int, country string, timestamp time.Time, amountOfTweets, amountOfNews int, reactionAvg, reactionTweets, reactionNews float32) Analyzis {
+	return Analyzis{keywordID, country, timestamp, amountOfTweets, amountOfNews, reactionAvg, reactionTweets, reactionNews}
 }
 
-type Tag struct {
+type Keyword struct {
 	ID             int    `json:"id"`
 	Name           string `json:"name"`
 	Provider       string `json:"provider"`
 	AdditionalInfo string `json:"additional_info"`
 }
 
-func NewTag(name, provider, additionalInfo string) Tag {
-	return Tag{0, name, provider, additionalInfo}
+func NewKeyword(name, provider, additionalInfo string) Keyword {
+	return Keyword{0, name, provider, additionalInfo}
 }
 func InitDb(db_connection string) (*sql.DB, error) {
 	db, err := sql.Open("mysql",
@@ -54,7 +54,7 @@ func InitDb(db_connection string) (*sql.DB, error) {
 	createAnalyzes := `
           CREATE TABLE IF NOT EXISTS analyzes (
           id SERIAL NOT NULL PRIMARY KEY,
-          tag_id INT NOT NULL,
+          keyword_id INT NOT NULL,
           country TEXT NOT NULL,
           timestamp DATETIME NOT NULL,
           amount_of_tweets INT NOT NULL,
@@ -67,99 +67,99 @@ func InitDb(db_connection string) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	createTags := `
-          CREATE TABLE IF NOT EXISTS tags (
+	createKeywords := `
+          CREATE TABLE IF NOT EXISTS keywords (
           id SERIAL NOT NULL PRIMARY KEY,
           name TEXT NOT NULL,
           provider TEXT NOT NULL,
           additional_info TEXT NOT NULL);
         `
-	_, err = db.Exec(createTags)
+	_, err = db.Exec(createKeywords)
 	if err != nil {
 		return nil, err
 	}
 	return db, nil
 }
 
-func (env Env) CreateTag(tag Tag) error {
-	tPresent, err := env.tagIsPresent(tag.Name)
+func (env Env) CreateKeyword(keyword Keyword) error {
+	tPresent, err := env.keywordIsPresent(keyword.Name)
 	if err != nil {
 		return err
 	}
 	if tPresent {
-		return errors.New("Tag already present")
+		return errors.New("Keyword already present")
 	}
-	_, err = env.db.Exec("INSERT INTO tags (name, provider, additional_info) VALUES (?, ?, ?)", tag.Name, tag.Provider, tag.AdditionalInfo)
+	_, err = env.db.Exec("INSERT INTO keywords (name, provider, additional_info) VALUES (?, ?, ?)", keyword.Name, keyword.Provider, keyword.AdditionalInfo)
 	if err != nil {
 		return err
 	}
-	log.Debug("Tag " + tag.Name + " inserted")
+	log.Debug("Keyword " + keyword.Name + " inserted")
 	return nil
 }
 
-func (env Env) CreateTagIfNotPresent(tag Tag) error {
-	tPresent, err := env.tagIsPresent(tag.Name)
+func (env Env) CreateKeywordIfNotPresent(keyword Keyword) error {
+	tPresent, err := env.keywordIsPresent(keyword.Name)
 	if err != nil {
 		return err
 	}
 	if tPresent {
 		return nil
 	}
-	err = env.CreateTag(tag)
+	err = env.CreateKeyword(keyword)
 	return err
 
 }
 
-func (env Env) GetTagID(name string) (int, error) {
-	tags, err := env.GetTagsWithName(name)
+func (env Env) GetKeywordID(name string) (int, error) {
+	keywords, err := env.GetKeywordsWithName(name)
 	if err != nil {
 		return -1, err
 	}
-	if len(tags) != 1 {
-		return -1, errors.New("Tag does not exist")
+	if len(keywords) != 1 {
+		return -1, errors.New("Keyword does not exist")
 	}
-	return tags[0].ID, nil
+	return keywords[0].ID, nil
 
 }
-func (env Env) GetTagsWithName(name string) ([]Tag, error) {
-	return env.getTags("SELECT * FROM tags where name=?", name)
+func (env Env) GetKeywordsWithName(name string) ([]Keyword, error) {
+	return env.getKeywords("SELECT * FROM keywords where name=?", name)
 }
 
-func (env Env) GetTags() ([]Tag, error) {
-	return env.getTags("SELECT * FROM tags")
+func (env Env) GetKeywords() ([]Keyword, error) {
+	return env.getKeywords("SELECT * FROM keywords")
 }
 
-func (env Env) getTags(query string, args ...interface{}) ([]Tag, error) {
-	tags := []Tag{}
+func (env Env) getKeywords(query string, args ...interface{}) ([]Keyword, error) {
+	keywords := []Keyword{}
 	rows, err := env.db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	for i := 0; rows.Next(); i++ {
-		tag := Tag{}
-		if err := rows.Scan(&tag.ID, &tag.Name, &tag.Provider, &tag.AdditionalInfo); err != nil {
+		keyword := Keyword{}
+		if err := rows.Scan(&keyword.ID, &keyword.Name, &keyword.Provider, &keyword.AdditionalInfo); err != nil {
 			return nil, err
 		}
-		tags = append(tags, tag)
+		keywords = append(keywords, keyword)
 	}
-	log.Debug(tags)
-	return tags, nil
+	log.Debug(keywords)
+	return keywords, nil
 }
 
-func (env Env) tagIsPresent(name string) (bool, error) {
-	tags, err := env.GetTagsWithName(name)
+func (env Env) keywordIsPresent(name string) (bool, error) {
+	keywords, err := env.GetKeywordsWithName(name)
 	if err != nil {
 		return false, err
 	}
-	if len(tags) != 0 {
+	if len(keywords) != 0 {
 		return true, nil
 	}
 	return false, nil
 }
 
 func (env Env) CreateAnalyzis(a Analyzis) error {
-	_, err := env.db.Exec("INSERT INTO analyzes (tag_id, country, timestamp, amount_of_tweets, amount_of_news, reaction_avg, reaction_tweets, reaction_news) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", a.TagID, a.Country, a.Timestamp, a.AmountOfTweets, a.AmountOfNews, a.ReactionAvg, a.ReactionTweets, a.ReactionNews)
+	_, err := env.db.Exec("INSERT INTO analyzes (keyword_id, country, timestamp, amount_of_tweets, amount_of_news, reaction_avg, reaction_tweets, reaction_news) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", a.KeywordID, a.Country, a.Timestamp, a.AmountOfTweets, a.AmountOfNews, a.ReactionAvg, a.ReactionTweets, a.ReactionNews)
 	if err != nil {
 		return err
 	}
@@ -176,7 +176,7 @@ func (env Env) getAnalyzes(query string, args ...interface{}) ([]Analyzis, error
 	defer rows.Close()
 	for i := 0; rows.Next(); i++ {
 		a := Analyzis{}
-		if err := rows.Scan(&a.TagID, &a.Country, &a.Timestamp, &a.AmountOfTweets, &a.AmountOfNews, &a.ReactionAvg, &a.ReactionTweets, &a.ReactionNews); err != nil {
+		if err := rows.Scan(&a.KeywordID, &a.Country, &a.Timestamp, &a.AmountOfTweets, &a.AmountOfNews, &a.ReactionAvg, &a.ReactionTweets, &a.ReactionNews); err != nil {
 			return nil, err
 		}
 		analyzes = append(analyzes, a)
@@ -189,14 +189,14 @@ func (env Env) getAnalyzes(query string, args ...interface{}) ([]Analyzis, error
 	return analyzes, nil
 }
 
-func (env Env) GetAnalyzes(tagName string, after, before time.Time, country string) ([]Analyzis, error) {
-	tagID, err := env.GetTagID(tagName)
+func (env Env) GetAnalyzes(keywordName string, after, before time.Time, country string) ([]Analyzis, error) {
+	keywordID, err := env.GetKeywordID(keywordName)
 	if err != nil {
 		return nil, err
 	}
 	if country == "any" {
-		return env.getAnalyzes("SELECT tag_id, country, timestamp, amount_of_tweets, amount_of_news, reaction_avg, reaction_tweets, reaction_news FROM analyzes WHERE tag_id=? AND timestamp >=? AND timestamp <=?", tagID, after, before)
+		return env.getAnalyzes("SELECT keyword_id, country, timestamp, amount_of_tweets, amount_of_news, reaction_avg, reaction_tweets, reaction_news FROM analyzes WHERE keyword_id=? AND timestamp >=? AND timestamp <=?", keywordID, after, before)
 	}
-	return env.getAnalyzes("SELECT tag_id, country, timestamp, amount_of_tweets, amount_of_news, reaction_avg, reaction_tweets, reaction_news FROM analyzes WHERE tag_id=? AND timestamp >=? AND timestamp <=? AND country=?", tagID, after, before, country)
+	return env.getAnalyzes("SELECT keyword_id, country, timestamp, amount_of_tweets, amount_of_news, reaction_avg, reaction_tweets, reaction_news FROM analyzes WHERE keyword_id=? AND timestamp >=? AND timestamp <=? AND country=?", keywordID, after, before, country)
 
 }

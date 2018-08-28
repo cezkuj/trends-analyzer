@@ -73,18 +73,17 @@ func analyze(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		tagProvider, present := dat["tagProvider"]
+		keywordProvider, present := dat["keywordProvider"]
 		if !present {
-			tagProvider = "unknown"
+			keywordProvider = "unknown"
 		}
-		tag := db.NewTag(keyword, tagProvider, "")
-		err = env.CreateTagIfNotPresent(tag)
+		k := db.NewKeyword(keyword, keywordProvider, "")
+		err = env.CreateKeywordIfNotPresent(k)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			log.Error(err)
 			return
 		}
-		tagID, err := env.GetTagID(tag.Name)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			log.Error(err)
@@ -98,7 +97,7 @@ func analyze(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			io.WriteString(w, "Provider not recognized.")
 		}
-		go analyzer.Analyze(env, keyword, textProvider, country, date, tagID)
+		go analyzer.Analyze(env, k.Name, textProvider, country, date)
 	}
 }
 
@@ -109,21 +108,21 @@ func status(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func tags(env db.Env) func(w http.ResponseWriter, r *http.Request) {
+func keywords(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		tags, err := env.GetTags()
+		keywords, err := env.GetKeywords()
 		if err != nil {
 			log.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		tagsJSON, err := json.Marshal(tags)
+		keywordsJSON, err := json.Marshal(keywords)
 		if err != nil {
 			log.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		w.Write(tagsJSON)
+		w.Write(keywordsJSON)
 	}
 
 }
@@ -242,7 +241,7 @@ func createServeMux(env db.Env) *http.ServeMux {
 	apiRouter := router.PathPrefix("/api").Subrouter()
 	apiRouter.HandleFunc("/analyze", analyze(env)).Methods("POST")
 	apiRouter.HandleFunc("/status", status(env)).Methods("GET")
-	apiRouter.HandleFunc("/tags", tags(env)).Methods("GET")
+	apiRouter.HandleFunc("/keywords", keywords(env)).Methods("GET")
 	apiRouter.HandleFunc("/analyzes", analyzes(env)).Methods("GET")
 	serveMux := &http.ServeMux{}
 	serveMux.Handle("/", router)
