@@ -33,6 +33,7 @@ func StartServer(dbCfg DbCfg, twitterApiKey, newsApiKey string, prod bool) {
 		log.Fatal(err)
 	}
 	env := db.NewEnv(database, twitterApiKey, newsApiKey)
+        go analyzer.StartDispatching(env)
 	if prod {
 		startProdServer(env)
 	}
