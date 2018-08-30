@@ -19,7 +19,7 @@ func StartDispatching(env db.Env) {
 		for _, k := range keywords {
                         log.Info(fmt.Sprintf("Started analyzing: %v", k))
 			go Analyze(env, k.Name, "both", "us", "any")
-			time.Sleep(5 * time.Second)
+			time.Sleep(3 * time.Minute)
 		}
 
 	}
