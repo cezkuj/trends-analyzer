@@ -30,8 +30,8 @@ func TestGetRatesSeries(t *testing.T) {
 		expectedValue float64
 	}{
 		{"PLN", "USD", time.Date(2018, 01, 02, 0, 0, 0, 0, time.UTC), time.Date(2018, 01, 02, 0, 0, 0, 0, time.UTC), 3.4546},
-		{"EUR", "USD", time.Date(2018, 01, 02, 0, 0, 0, 0, time.UTC), time.Date(2018, 01, 02, 0, 0, 0, 0, time.UTC), 1.2071151508134081},
-		{"USD", "EUR", time.Date(2018, 01, 02, 0, 0, 0, 0, time.UTC), time.Date(2018, 01, 02, 0, 0, 0, 0, time.UTC), 0.8284213807822355},
+		{"EUR", "USD", time.Date(2018, 01, 02, 0, 0, 0, 0, time.UTC), time.Date(2018, 01, 02, 0, 0, 0, 0, time.UTC), 0.8284213807822355},
+		{"USD", "EUR", time.Date(2018, 01, 02, 0, 0, 0, 0, time.UTC), time.Date(2018, 01, 02, 0, 0, 0, 0, time.UTC), 1.2071151508134081},
 	}
 	for _, tc := range testCases {
 		rs, err := GetRatesSeries(tc.baseCur, tc.cur, tc.startDate, tc.endDate)
