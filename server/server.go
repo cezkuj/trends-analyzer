@@ -35,7 +35,6 @@ func StartServer(dbCfg DbCfg, twitterApiKey, newsApiKey string, prod bool) {
 		log.Fatal(err)
 	}
 	env := db.NewEnv(database, twitterApiKey, newsApiKey)
-	go analyzer.StartDispatching(env)
 	if prod {
 		startProdServer(env)
 	}
@@ -184,6 +183,13 @@ func analyzes(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func dispatcher(env db.Env) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		go analyzer.StartDispatching(env)
+	}
+
+}
+
 func countries(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -325,6 +331,7 @@ func createServeMux(env db.Env) *http.ServeMux {
 	apiRouter.HandleFunc("/analyzes/{keyword}", analyzes(env)).Methods("GET")
 	apiRouter.HandleFunc("/countries/{keyword}", countries(env)).Methods("GET")
 	apiRouter.HandleFunc("/rates/{baseCur}/{cur}", rates(env)).Methods("GET")
+	apiRouter.HandleFunc("/dispatcher", dispatcher(env)).Methods("POST")
 	serveMux := &http.ServeMux{}
 	serveMux.Handle("/", router)
 	return serveMux
