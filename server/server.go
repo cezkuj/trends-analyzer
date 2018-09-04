@@ -8,6 +8,7 @@ import (
 	"golang.org/x/crypto/acme/autocert"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -228,20 +229,22 @@ func rates(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 		if startDateS == "" {
 			startDate = time.Now()
 		} else {
-			startDate, err = time.Parse(time.RFC3339, startDateS)
+			startDateI, err := strconv.ParseInt(startDateS, 10, 64)
 			if err != nil {
-				log.Error(err)
+				log.Error("Failed on parsing startDate timestamp.", err)
 				return
 			}
+			startDate = time.Unix(startDateI/1000, 0)
 		}
 		if endDateS == "" {
 			endDate = time.Now()
 		} else {
-			endDate, err = time.Parse(time.RFC3339, endDateS)
+			endDateI, err := strconv.ParseInt(endDateS, 10, 64)
 			if err != nil {
-				log.Error(err)
+				log.Error("Failed on parsing endDate timestamp.", err)
 				return
 			}
+			endDate = time.Unix(endDateI/1000, 0)
 
 		}
 		ratesSeries, err := currency.GetRatesSeries(baseCur, cur, startDate, endDate)

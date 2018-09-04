@@ -62,7 +62,7 @@ func GetRatesSeries(baseCur, cur string, startDate, endDate time.Time) (ratesSer
 		if err != nil {
 			return ratesSeries{}, fmt.Errorf("Failed on parsing date. %v.", err)
 		}
-		rr[i] = rate{rsCurNBP.Rates[i].Mid / rsBaseNBP.Rates[i].Mid, date}
+		rr[i] = rate{float64(int(10000*rsCurNBP.Rates[i].Mid/rsBaseNBP.Rates[i].Mid)) / 10000, date}
 	}
 	return ratesSeries{baseCur, cur, rr}, nil
 
