@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-  
-        log "github.com/sirupsen/logrus"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type rate struct {
@@ -60,7 +60,7 @@ func GetRatesSeries(baseCur, cur string, startDate, endDate time.Time) (ratesSer
 	for i := range rsBaseNBP.Rates {
 		date, err := time.Parse(time.RFC3339, rsBaseNBP.Rates[i].Date+"T00:00:00Z")
 		if err != nil {
-			return ratesSeries{}, fmt.Errorf("Failed on call to NBP. %v.", err)
+			return ratesSeries{}, fmt.Errorf("Failed on parsing date. %v.", err)
 		}
 		rr[i] = rate{rsBaseNBP.Rates[i].Mid / rsCurNBP.Rates[i].Mid, date}
 	}
@@ -75,7 +75,7 @@ func callNBP(cur, startDate, endDate string) (ratesSeriesNBP, error) {
 	if err != nil {
 		return ratesSeriesNBP{}, fmt.Errorf("Failed on GET on NBP api. %v.", err)
 	}
-        log.Debug("%v succesfully called", url)
+	log.Debug("%v succesfully called", url)
 	defer resp.Body.Close()
 	decoder := json.NewDecoder(resp.Body)
 	var rsNBP ratesSeriesNBP

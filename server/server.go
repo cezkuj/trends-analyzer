@@ -13,6 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/cezkuj/trends-analyzer/analyzer"
+	"github.com/cezkuj/trends-analyzer/currency"
 	"github.com/cezkuj/trends-analyzer/db"
 )
 
@@ -33,7 +34,7 @@ func StartServer(dbCfg DbCfg, twitterApiKey, newsApiKey string, prod bool) {
 		log.Fatal(err)
 	}
 	env := db.NewEnv(database, twitterApiKey, newsApiKey)
-        go analyzer.StartDispatching(env)
+	go analyzer.StartDispatching(env)
 	if prod {
 		startProdServer(env)
 	}
@@ -50,7 +51,7 @@ func analyze(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 			log.Error(err)
 			return
 		}
-                keyword, present := dat["keyword"]
+		keyword, present := dat["keyword"]
 		if !present {
 			w.WriteHeader(http.StatusBadRequest)
 			io.WriteString(w, "Keyword not present")
@@ -213,6 +214,53 @@ func countries(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func rates(env db.Env) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		baseCur := vars["baseCur"]
+		cur := vars["cur"]
+		values := r.URL.Query()
+		startDateS := values.Get("startDate")
+		endDateS := values.Get("endDate")
+		var startDate time.Time
+		var endDate time.Time
+		var err error
+		if startDateS == "" {
+			startDate = time.Now()
+		} else {
+			startDate, err = time.Parse(time.RFC3339, startDateS)
+			if err != nil {
+				log.Error(err)
+				return
+			}
+		}
+		if endDateS == "" {
+			endDate = time.Now()
+		} else {
+			endDate, err = time.Parse(time.RFC3339, endDateS)
+			if err != nil {
+				log.Error(err)
+				return
+			}
+
+		}
+		ratesSeries, err := currency.GetRatesSeries(baseCur, cur, startDate, endDate)
+		if err != nil {
+			log.Error(err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		ratesSeriesJSON, err := json.Marshal(ratesSeries)
+		if err != nil {
+			log.Error(err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		w.Write(ratesSeriesJSON)
+	}
+
+}
+
 func startProdServer(env db.Env) {
 	m := &autocert.Manager{
 		Cache:      autocert.DirCache(".secret"),
@@ -273,6 +321,7 @@ func createServeMux(env db.Env) *http.ServeMux {
 	apiRouter.HandleFunc("/keywords", keywords(env)).Methods("GET")
 	apiRouter.HandleFunc("/analyzes/{keyword}", analyzes(env)).Methods("GET")
 	apiRouter.HandleFunc("/countries/{keyword}", countries(env)).Methods("GET")
+	apiRouter.HandleFunc("/rates/{baseCur}/{cur}", rates(env)).Methods("GET")
 	serveMux := &http.ServeMux{}
 	serveMux.Handle("/", router)
 	return serveMux

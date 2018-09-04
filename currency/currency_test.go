@@ -4,24 +4,24 @@ import (
 	"testing"
 	"time"
 
-        log "github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 func TestCallNBP(t *testing.T) {
-        log.SetLevel(log.DebugLevel)
+	log.SetLevel(log.DebugLevel)
 	rsNBP, err := callNBP("USD", "2018-01-02", "2018-01-02")
 	if err != nil {
 		t.Fatal(err)
 	}
 	expected := ratesSeriesNBP{"USD", []rateNBP{{3.4546, "2018-01-02"}}}
-        t.Log(rsNBP)
+	t.Log(rsNBP)
 	if rsNBP.Code != expected.Code || rsNBP.Rates[0] != expected.Rates[0] {
 		t.Fatalf("Codes: %v, %v, Rates: %v, %v. Rates series does not match expected ones", rsNBP.Code, expected.Code, rsNBP.Rates[0], expected.Rates[0])
 	}
 }
 
 func TestGetRatesSeries(t *testing.T) {
-        log.SetLevel(log.DebugLevel)
+	log.SetLevel(log.DebugLevel)
 	testCases := []struct {
 		baseCur       string
 		cur           string
