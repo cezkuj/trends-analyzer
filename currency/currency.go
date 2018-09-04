@@ -1,17 +1,22 @@
 package currency
 
 import (
+	"crypto/tls"
+	"encoding/json"
+	"fmt"
+	"net/http"
 	"time"
-        "fmt"
+  
+        log "github.com/sirupsen/logrus"
 )
 
 type rate struct {
-	Val  float32   `json:"val"`
+	Val  float64   `json:"val"`
 	Date time.Time `json:"date"`
 }
 
 type rateNBP struct {
-	Mid  float32 `json:"mid"`
+	Mid  float64 `json:"mid"`
 	Date string  `json:"effectiveDate"`
 }
 type ratesSeriesNBP struct {
@@ -25,19 +30,19 @@ type ratesSeries struct {
 }
 
 func GetRatesSeries(baseCur, cur string, startDate, endDate time.Time) (ratesSeries, error) {
-        startDateS := getDate(startDate)
-        endDateS := getDate(endDate)
+	startDateS := getDate(startDate)
+	endDateS := getDate(endDate)
 	if baseCur == "PLN" {
 		rsNBP, err := callNBP(cur, startDateS, endDateS)
 		rr := make([]rate, len(rsNBP.Rates))
 		if err != nil {
-			return ratesSeries{}, err
+			return ratesSeries{}, fmt.Errorf("Failed on call to NBP. %v.", err)
 		}
 
 		for i, rs := range rsNBP.Rates {
 			date, err := time.Parse(time.RFC3339, rs.Date+"T00:00:00Z")
 			if err != nil {
-				return ratesSeries{}, err
+				return ratesSeries{}, fmt.Errorf("Failed on parsing date. %v", err)
 			}
 			rr[i] = rate{rs.Mid, date}
 		}
@@ -45,17 +50,17 @@ func GetRatesSeries(baseCur, cur string, startDate, endDate time.Time) (ratesSer
 	}
 	rsBaseNBP, err := callNBP(baseCur, startDateS, endDateS)
 	if err != nil {
-		return ratesSeries{}, err
+		return ratesSeries{}, fmt.Errorf("Failed on call to NBP. %v.", err)
 	}
 	rsCurNBP, err := callNBP(cur, startDateS, endDateS)
 	if err != nil {
-		return ratesSeries{}, err
+		return ratesSeries{}, fmt.Errorf("Failed on call to NBP. %v.", err)
 	}
 	rr := make([]rate, len(rsBaseNBP.Rates))
 	for i := range rsBaseNBP.Rates {
 		date, err := time.Parse(time.RFC3339, rsBaseNBP.Rates[i].Date+"T00:00:00Z")
 		if err != nil {
-			return ratesSeries{}, err
+			return ratesSeries{}, fmt.Errorf("Failed on call to NBP. %v.", err)
 		}
 		rr[i] = rate{rsBaseNBP.Rates[i].Mid / rsCurNBP.Rates[i].Mid, date}
 	}
@@ -63,34 +68,32 @@ func GetRatesSeries(baseCur, cur string, startDate, endDate time.Time) (ratesSer
 
 }
 
-func callNBP(cur string, startDate, endDate time.Time) (ratesSeriesNBP, error) {
-        client := clientWithTimeout("true")
-        url := fmt.Spritntf("https://api.nbp.pl/api/exchangerates/rates/A/%v/%v/%v?format=json", cur, startDate, endDate)
-        resp, err := client.Get(url)
-        if err != nil {
-             return ratesSeriesNBP{}, nil
-        }
-        defer resp.Body.Close()
+func callNBP(cur, startDate, endDate string) (ratesSeriesNBP, error) {
+	client := clientWithTimeout(true)
+	url := fmt.Sprintf("https://api.nbp.pl/api/exchangerates/rates/A/%v/%v/%v?format=json", cur, startDate, endDate)
+	resp, err := client.Get(url)
+	if err != nil {
+		return ratesSeriesNBP{}, fmt.Errorf("Failed on GET on NBP api. %v.", err)
+	}
+        log.Debug("%v succesfully called", url)
+	defer resp.Body.Close()
 	decoder := json.NewDecoder(resp.Body)
 	var rsNBP ratesSeriesNBP
 	err = decoder.Decode(&rsNBP)
 	if err != nil {
-		return nil, err
+		return ratesSeriesNBP{}, fmt.Errorf("Failed on decoding. %v.", err)
 	}
 	return rsNBP, nil
 }
 
-func getDate(date time.Time) {
-   year, month, day := date.Date()
-   return fmt.Sprintf("%v-%v-%v", year, month, day)
+func getDate(date time.Time) string {
+	return date.String()[:10]
 }
 func clientWithTimeout(tlsSecure bool) (client http.Client) {
-        timeout := 30 * time.Second
-        //Default http client does not have timeout
-        tr := &http.Transport{
-                TLSClientConfig: &tls.Config{InsecureSkipVerify: !tlsSecure},
-        }
-        return http.Client{Timeout: timeout, Transport: tr}
-
+	timeout := 30 * time.Second
+	//Default http client does not have timeout
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: !tlsSecure},
+	}
+	return http.Client{Timeout: timeout, Transport: tr}
 }
-
