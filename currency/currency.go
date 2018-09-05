@@ -72,11 +72,11 @@ func callNBP(cur, startDate, endDate string) (ratesSeriesNBP, error) {
 	client := clientWithTimeout(true)
 	url := fmt.Sprintf("https://api.nbp.pl/api/exchangerates/rates/A/%v/%v/%v?format=json", cur, startDate, endDate)
 	resp, err := client.Get(url)
+	defer resp.Body.Close()
 	if err != nil {
 		return ratesSeriesNBP{}, fmt.Errorf("Failed on GET on NBP api. %v.", err)
 	}
 	log.Debug("%v succesfully called", url)
-	defer resp.Body.Close()
 	decoder := json.NewDecoder(resp.Body)
 	var rsNBP ratesSeriesNBP
 	err = decoder.Decode(&rsNBP)

@@ -57,10 +57,17 @@ func Analyze(env db.Env, keyword, textProvider, country, date string) {
 	}
 	c := make(chan analyzedText)
 	wg := new(sync.WaitGroup)
+	ctx := context.Background()
+
+	client, err := language.NewClient(ctx)
+	if err != nil {
+		log.Error(err)
+		return
+	}
 
 	for _, t := range tt {
 		wg.Add(1)
-		go analyzeText(t, c, wg)
+		go analyzeText(client, ctx, t, c, wg)
 	}
 	go func() {
 		wg.Wait()
@@ -100,9 +107,9 @@ func Analyze(env db.Env, keyword, textProvider, country, date string) {
 	}
 
 }
-func analyzeText(t text, c chan analyzedText, wg *sync.WaitGroup) {
+func analyzeText(client *language.Client, ctx context.Context, t text, c chan analyzedText, wg *sync.WaitGroup) {
 	defer wg.Done()
-	s, err := analyzeSentiment(t.text)
+	s, err := analyzeSentiment(client, ctx, t.text)
 	if err != nil {
 		log.Error(err)
 		return
@@ -110,15 +117,7 @@ func analyzeText(t text, c chan analyzedText, wg *sync.WaitGroup) {
 	c <- analyzedText{s, t.textProvider, t.timestamp}
 
 }
-func analyzeSentiment(text string) (float32, error) {
-	ctx := context.Background()
-
-	// Creates a client.
-	client, err := language.NewClient(ctx)
-	if err != nil {
-		return 0, err
-	}
-	// Detects the sentiment of the text.
+func analyzeSentiment(client *language.Client, ctx context.Context, text string) (float32, error) {
 	sentiment, err := client.AnalyzeSentiment(ctx, &languagepb.AnalyzeSentimentRequest{
 		Document: &languagepb.Document{
 			Source: &languagepb.Document_Content{
