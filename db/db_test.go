@@ -20,7 +20,7 @@ func truncateTable(table_name string) {
 
 func TestKeywordIsNotPresent(t *testing.T) {
 	env := setupEnv()
-	present, err := env.keywordIsPresent("trend")
+	present, err := env.KeywordIsPresent("trend")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,7 +37,7 @@ func TestKeywordIsPresent(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	present, err := env.keywordIsPresent("trend")
+	present, err := env.KeywordIsPresent("trend")
 	if err != nil {
 		t.Fatal(err)
 	}

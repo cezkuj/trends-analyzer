@@ -162,6 +162,17 @@ func analyzes(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 		if country == "" {
 			country = "any"
 		}
+		keywordPresent, err := env.KeywordIsPresent(keyword)
+		if err != nil {
+			log.Error(fmt.Errorf("Call to KeywordIsPresent failed in analyzes, %v", err))
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		if !keywordPresent {
+			log.Error(fmt.Sprintf("%v is not present", keyword))
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
 		analyzes, err := env.GetAnalyzes(keyword, after, before, country)
 		if err != nil {
 			log.Error(fmt.Errorf("Call to GetAnalyzes failed in analyzes, %v", err))

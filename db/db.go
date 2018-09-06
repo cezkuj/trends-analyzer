@@ -83,9 +83,9 @@ func InitDb(db_connection string) (*sql.DB, error) {
 }
 
 func (env Env) CreateKeyword(keyword Keyword) error {
-	tPresent, err := env.keywordIsPresent(keyword.Name)
+	tPresent, err := env.KeywordIsPresent(keyword.Name)
 	if err != nil {
-		return fmt.Errorf("Failed on call to keywordIsPresent in CreateKeyword, %v", err)
+		return fmt.Errorf("Failed on call to KeywordIsPresent in CreateKeyword, %v", err)
 	}
 	if tPresent {
 		return errors.New("Keyword already present")
@@ -99,9 +99,9 @@ func (env Env) CreateKeyword(keyword Keyword) error {
 }
 
 func (env Env) CreateKeywordIfNotPresent(keyword Keyword) error {
-	tPresent, err := env.keywordIsPresent(keyword.Name)
+	tPresent, err := env.KeywordIsPresent(keyword.Name)
 	if err != nil {
-		return fmt.Errorf("Failed on call to keywordIsPresent in CreateKeywordIfNotPresent, %v", err)
+		return fmt.Errorf("Failed on call to KeywordIsPresent in CreateKeywordIfNotPresent, %v", err)
 	}
 	if tPresent {
 		return nil
@@ -151,10 +151,10 @@ func (env Env) getKeywords(query string, args ...interface{}) ([]Keyword, error)
 	return keywords, nil
 }
 
-func (env Env) keywordIsPresent(name string) (bool, error) {
+func (env Env) KeywordIsPresent(name string) (bool, error) {
 	keywords, err := env.GetKeywordsWithName(name)
 	if err != nil {
-		return false, fmt.Errorf("Failed on call to GetKeywordsWithName in keywordIsPresent, %v", err)
+		return false, fmt.Errorf("Failed on call to GetKeywordsWithName in KeywordIsPresent, %v", err)
 	}
 	if len(keywords) != 0 {
 		return true, nil
