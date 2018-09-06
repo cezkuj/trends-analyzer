@@ -42,7 +42,7 @@ func GetRatesSeries(baseCur, cur string, startDate, endDate time.Time) (ratesSer
 		for i, rs := range rsNBP.Rates {
 			date, err := time.Parse(time.RFC3339, rs.Date+"T00:00:00Z")
 			if err != nil {
-				return ratesSeries{}, fmt.Errorf("Failed on parsing date. %v", err)
+				return ratesSeries{}, fmt.Errorf("Failed on parsing date for PLN. %v", err)
 			}
 			rr[i] = rate{rs.Mid, date}
 		}
@@ -50,17 +50,17 @@ func GetRatesSeries(baseCur, cur string, startDate, endDate time.Time) (ratesSer
 	}
 	rsBaseNBP, err := callNBP(baseCur, startDateS, endDateS)
 	if err != nil {
-		return ratesSeries{}, fmt.Errorf("Failed on call to NBP. %v.", err)
+		return ratesSeries{}, fmt.Errorf("Failed on base call to NBP. %v.", err)
 	}
 	rsCurNBP, err := callNBP(cur, startDateS, endDateS)
 	if err != nil {
-		return ratesSeries{}, fmt.Errorf("Failed on call to NBP. %v.", err)
+		return ratesSeries{}, fmt.Errorf("Failed on cur call to NBP. %v.", err)
 	}
 	rr := make([]rate, len(rsBaseNBP.Rates))
 	for i := range rsBaseNBP.Rates {
 		date, err := time.Parse(time.RFC3339, rsBaseNBP.Rates[i].Date+"T00:00:00Z")
 		if err != nil {
-			return ratesSeries{}, fmt.Errorf("Failed on parsing date. %v.", err)
+			return ratesSeries{}, fmt.Errorf("Failed on parsing date for not PLN currencies. %v.", err)
 		}
 		rr[i] = rate{float64(int(10000*rsCurNBP.Rates[i].Mid/rsBaseNBP.Rates[i].Mid)) / 10000, date}
 	}

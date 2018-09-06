@@ -32,7 +32,7 @@ func NewDbCfg(user, pass, host, name string) DbCfg {
 func StartServer(dbCfg DbCfg, twitterApiKey, newsApiKey string, prod bool) {
 	database, err := db.InitDb(dbCfg.user + ":" + dbCfg.pass + "@tcp(" + dbCfg.host + ")/" + dbCfg.name)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Errorf("Failed on InitDb in StartServer, %v", err))
 	}
 	env := db.NewEnv(database, twitterApiKey, newsApiKey)
 	if prod {
@@ -48,13 +48,14 @@ func analyze(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 		err := decoder.Decode(&dat)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			log.Error(err)
+			log.Error(fmt.Errorf("Failed on decoding in analyze, %v", err))
 			return
 		}
 		keyword, present := dat["keyword"]
 		if !present {
 			w.WriteHeader(http.StatusBadRequest)
 			io.WriteString(w, "Keyword not present")
+			log.Error("Keyword not present in analyze")
 			return
 		}
 		date, present := dat["date"]
@@ -83,12 +84,7 @@ func analyze(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 		err = env.CreateKeywordIfNotPresent(k)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			log.Error(err)
-			return
-		}
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			log.Error(err)
+			log.Error(fmt.Errorf("Call to CreateKeywordIfNotPresent in analyze, %v", err))
 			return
 		}
 		textProvider, present := dat["textProvider"]
@@ -114,13 +110,13 @@ func keywords(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		keywords, err := env.GetKeywords()
 		if err != nil {
-			log.Error(err)
+			log.Error(fmt.Errorf("Call to GetKeywords failed in keywords", err))
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		keywordsJSON, err := json.Marshal(keywords)
 		if err != nil {
-			log.Error(err)
+			log.Error(fmt.Errorf("Failed on marshalling %v in keyword, %v", keywords, err))
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -142,7 +138,7 @@ func analyzes(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 		if afterStr := values.Get("after"); afterStr != "" {
 			after, err = time.Parse(time.RFC3339, afterStr)
 			if err != nil {
-				log.Error(err)
+				log.Error(fmt.Errorf("Failed on parsing %v in analyzes, %v", afterStr, err))
 				w.WriteHeader(http.StatusBadRequest)
 				return
 
@@ -154,7 +150,7 @@ func analyzes(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 		if beforeStr := values.Get("before"); beforeStr != "" {
 			before, err = time.Parse(time.RFC3339, beforeStr)
 			if err != nil {
-				log.Error(err)
+				log.Error(fmt.Errorf("Failed on parsing %v in analyzes, %v", beforeStr, err))
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
@@ -168,13 +164,13 @@ func analyzes(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 		}
 		analyzes, err := env.GetAnalyzes(keyword, after, before, country)
 		if err != nil {
-			log.Error(err)
+			log.Error(fmt.Errorf("Call to GetAnalyzes failed in analyzes, %v", err))
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		analyzesJSON, err := json.Marshal(analyzes)
 		if err != nil {
-			log.Error(err)
+			log.Error(fmt.Errorf("Failed on marshalling %v in analyzes, %v", analyzes, err))
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -187,7 +183,6 @@ func dispatcher(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		go analyzer.StartDispatching(env)
 	}
-
 }
 
 func countries(env db.Env) func(w http.ResponseWriter, r *http.Request) {
@@ -196,7 +191,7 @@ func countries(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 		keyword := vars["keyword"]
 		analyzes, err := env.GetAnalyzes(keyword, time.Time{}, time.Now(), "any")
 		if err != nil {
-			log.Error(err)
+			log.Error(fmt.Errorf("Call to GetAnalyzes failed in countries, %v", err))
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -212,7 +207,7 @@ func countries(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 		}
 		countriesJSON, err := json.Marshal(countries)
 		if err != nil {
-			log.Error(err)
+			log.Error(fmt.Errorf("Failed on marshaling %v in countries, %v", countries, err))
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -237,7 +232,7 @@ func rates(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 		} else {
 			startDateI, err := strconv.ParseInt(startDateS, 10, 64)
 			if err != nil {
-				log.Error("Failed on parsing startDate timestamp.", err)
+				log.Error(fmt.Errorf("Failed on parsing startDate timestamp, %v", err))
 				return
 			}
 			startDate = time.Unix(startDateI/1000, 0)
@@ -247,7 +242,7 @@ func rates(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 		} else {
 			endDateI, err := strconv.ParseInt(endDateS, 10, 64)
 			if err != nil {
-				log.Error("Failed on parsing endDate timestamp.", err)
+				log.Error(fmt.Errorf("Failed on parsing endDate timestamp, %v", err))
 				return
 			}
 			endDate = time.Unix(endDateI/1000, 0)
@@ -255,19 +250,18 @@ func rates(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 		}
 		ratesSeries, err := currency.GetRatesSeries(baseCur, cur, startDate, endDate)
 		if err != nil {
-			log.Error(err)
+			log.Error(fmt.Errorf("Call to GetRatesSeries failed in rates, %v", err))
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		ratesSeriesJSON, err := json.Marshal(ratesSeries)
 		if err != nil {
-			log.Error(err)
+			log.Error(fmt.Errorf("Failed on marshalling %v in rates, %v", ratesSeries, err))
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		w.Write(ratesSeriesJSON)
 	}
-
 }
 
 func startProdServer(env db.Env) {
@@ -311,6 +305,7 @@ func startProdServer(env db.Env) {
 	log.Println(srvTLS.ListenAndServeTLS("", ""))
 
 }
+
 func startDevServer(env db.Env) {
 	serveMux := createServeMux(env)
 	srv := &http.Server{
@@ -322,6 +317,7 @@ func startDevServer(env db.Env) {
 	}
 	log.Println(srv.ListenAndServe())
 }
+
 func createServeMux(env db.Env) *http.ServeMux {
 	router := mux.NewRouter()
 	apiRouter := router.PathPrefix("/api").Subrouter()

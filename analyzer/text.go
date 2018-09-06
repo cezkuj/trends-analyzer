@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -42,7 +43,7 @@ func Analyze(env db.Env, keyword, textProvider, country, date string) {
 	if textProvider == "twitter" || textProvider == "both" {
 		tweets, err := getTweets(keyword, country, date, env.TwitterApiKey)
 		if err != nil {
-			log.Error(err)
+			log.Error(fmt.Errorf("Failed on call to getTweets in Analyze, %v", err))
 			return
 		}
 		tt = append(tt, tweets...)
@@ -50,7 +51,7 @@ func Analyze(env db.Env, keyword, textProvider, country, date string) {
 	if textProvider == "news" || textProvider == "both" {
 		nn, err := getNews(keyword, country, date, env.NewsApiKey)
 		if err != nil {
-			log.Error(err)
+			log.Error(fmt.Errorf("Failed on call to getNews in Analyze, %v", err))
 			return
 		}
 		tt = append(tt, nn...)
@@ -61,7 +62,7 @@ func Analyze(env db.Env, keyword, textProvider, country, date string) {
 
 	client, err := language.NewClient(ctx)
 	if err != nil {
-		log.Error(err)
+		log.Error(fmt.Errorf("Failed to create new language client, %v", err))
 		return
 	}
 
@@ -96,13 +97,13 @@ func Analyze(env db.Env, keyword, textProvider, country, date string) {
 	}
 	keywordID, err := env.GetKeywordID(keyword)
 	if err != nil {
-		log.Error(err)
+		log.Error(fmt.Errorf("Failed on call to GetKeywordID for %v in Analyze, %v", keyword, err))
 		return
 	}
 	analyzis := db.NewAnalyzis(keywordID, country, time.Now(), stats["twitter"], stats["news"], reactionAvg, reactionTweets, reactionNews)
 	err = env.CreateAnalyzis(analyzis)
 	if err != nil {
-		log.Error(err)
+		log.Error(fmt.Errorf("Failed on call to CreateAnalyzes for %v in Analyze, %v", analyzis, err))
 
 	}
 
@@ -111,7 +112,7 @@ func analyzeText(client *language.Client, ctx context.Context, t text, c chan an
 	defer wg.Done()
 	s, err := analyzeSentiment(client, ctx, t.text)
 	if err != nil {
-		log.Error(err)
+		log.Error(fmt.Errorf("Failed on call to analyzeSentiment, %v", err))
 		return
 	}
 	c <- analyzedText{s, t.textProvider, t.timestamp}
@@ -128,7 +129,7 @@ func analyzeSentiment(client *language.Client, ctx context.Context, text string)
 		EncodingType: languagepb.EncodingType_UTF8,
 	})
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("Failed on analyzing sentiment for %v, %v", text, err)
 	}
 	return sentiment.DocumentSentiment.Score, nil
 }

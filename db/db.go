@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -49,7 +50,7 @@ func InitDb(db_connection string) (*sql.DB, error) {
 		db_connection+"?parseTime=true")
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed on openning mysql connection in InitDb, %v", err)
 	}
 	createAnalyzes := `
           CREATE TABLE IF NOT EXISTS analyzes (
@@ -65,7 +66,7 @@ func InitDb(db_connection string) (*sql.DB, error) {
         `
 	_, err = db.Exec(createAnalyzes)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed on executing creation of analyzes table, %v", err)
 	}
 	createKeywords := `
           CREATE TABLE IF NOT EXISTS keywords (
@@ -76,7 +77,7 @@ func InitDb(db_connection string) (*sql.DB, error) {
         `
 	_, err = db.Exec(createKeywords)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed on executing creation of keywords table, %v", err)
 	}
 	return db, nil
 }
@@ -84,14 +85,14 @@ func InitDb(db_connection string) (*sql.DB, error) {
 func (env Env) CreateKeyword(keyword Keyword) error {
 	tPresent, err := env.keywordIsPresent(keyword.Name)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed on call to keywordIsPresent in CreateKeyword, %v", err)
 	}
 	if tPresent {
 		return errors.New("Keyword already present")
 	}
 	_, err = env.db.Exec("INSERT INTO keywords (name, provider, additional_info) VALUES (?, ?, ?)", keyword.Name, keyword.Provider, keyword.AdditionalInfo)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed on insertion to keywords in CreateKeyword, %v", err)
 	}
 	log.Debug("Keyword " + keyword.Name + " inserted")
 	return nil
@@ -100,20 +101,23 @@ func (env Env) CreateKeyword(keyword Keyword) error {
 func (env Env) CreateKeywordIfNotPresent(keyword Keyword) error {
 	tPresent, err := env.keywordIsPresent(keyword.Name)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed on call to keywordIsPresent in CreateKeywordIfNotPresent, %v", err)
 	}
 	if tPresent {
 		return nil
 	}
 	err = env.CreateKeyword(keyword)
-	return err
+	if err != nil {
+		return fmt.Errorf("Failed on call to CreateKeyword in CreateKeywordIfPresent, %v", err)
+	}
+	return nil
 
 }
 
 func (env Env) GetKeywordID(name string) (int, error) {
 	keywords, err := env.GetKeywordsWithName(name)
 	if err != nil {
-		return -1, err
+		return -1, fmt.Errorf("Failed on call to GetKeywordsWithName in GetKeywordID, %v", err)
 	}
 	if len(keywords) != 1 {
 		return -1, errors.New("Keyword does not exist")
@@ -133,13 +137,13 @@ func (env Env) getKeywords(query string, args ...interface{}) ([]Keyword, error)
 	keywords := []Keyword{}
 	rows, err := env.db.Query(query, args...)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed on selecting %v with %v in getKeywords, %v", query, args, err)
 	}
 	defer rows.Close()
 	for i := 0; rows.Next(); i++ {
 		keyword := Keyword{}
 		if err := rows.Scan(&keyword.ID, &keyword.Name, &keyword.Provider, &keyword.AdditionalInfo); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Rows scan failed in getKeywords on %v", err)
 		}
 		keywords = append(keywords, keyword)
 	}
@@ -150,7 +154,7 @@ func (env Env) getKeywords(query string, args ...interface{}) ([]Keyword, error)
 func (env Env) keywordIsPresent(name string) (bool, error) {
 	keywords, err := env.GetKeywordsWithName(name)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("Failed on call to GetKeywordsWithName in keywordIsPresent, %v", err)
 	}
 	if len(keywords) != 0 {
 		return true, nil
@@ -161,7 +165,7 @@ func (env Env) keywordIsPresent(name string) (bool, error) {
 func (env Env) CreateAnalyzis(a Analyzis) error {
 	_, err := env.db.Exec("INSERT INTO analyzes (keyword_id, country, timestamp, amount_of_tweets, amount_of_news, reaction_avg, reaction_tweets, reaction_news) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", a.KeywordID, a.Country, a.Timestamp, a.AmountOfTweets, a.AmountOfNews, a.ReactionAvg, a.ReactionTweets, a.ReactionNews)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed on inserting analyzis in CreateAnalyzis, %v", err)
 	}
 	log.Debug(a)
 	return nil
@@ -171,19 +175,15 @@ func (env Env) getAnalyzes(query string, args ...interface{}) ([]Analyzis, error
 	analyzes := []Analyzis{}
 	rows, err := env.db.Query(query, args...)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed on selecting %v with %v in getAnalyzes, %v", query, args, err)
 	}
 	defer rows.Close()
 	for i := 0; rows.Next(); i++ {
 		a := Analyzis{}
 		if err := rows.Scan(&a.KeywordID, &a.Country, &a.Timestamp, &a.AmountOfTweets, &a.AmountOfNews, &a.ReactionAvg, &a.ReactionTweets, &a.ReactionNews); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Rows scan failed in getAnalyzes on %v", err)
 		}
 		analyzes = append(analyzes, a)
-	}
-
-	if err != nil {
-		return nil, err
 	}
 	log.Debug(analyzes)
 	return analyzes, nil
@@ -192,7 +192,7 @@ func (env Env) getAnalyzes(query string, args ...interface{}) ([]Analyzis, error
 func (env Env) GetAnalyzes(keywordName string, after, before time.Time, country string) ([]Analyzis, error) {
 	keywordID, err := env.GetKeywordID(keywordName)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed on call to GetKeywordID in GetAnalyzes, %v", err)
 	}
 	if country == "any" {
 		return env.getAnalyzes("SELECT keyword_id, country, timestamp, amount_of_tweets, amount_of_news, reaction_avg, reaction_tweets, reaction_news FROM analyzes WHERE keyword_id=? AND timestamp >=? AND timestamp <=?", keywordID, after, before)

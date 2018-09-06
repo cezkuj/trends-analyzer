@@ -42,7 +42,7 @@ func startServer(cmd *cobra.Command, args []string) {
 }
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		log.Error(fmt.Errorf("Execute failed on %v", err))
 		os.Exit(1)
 	}
 }

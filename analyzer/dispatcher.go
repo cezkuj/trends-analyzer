@@ -12,14 +12,14 @@ import (
 func StartDispatching(env db.Env) {
 	keywords, err := env.GetKeywords()
 	if err != nil {
-		log.Error(err)
+		log.Error(fmt.Errorf("GetKeywords in StartDispatching failed on %v", err))
 		return
 	}
 	for {
 		for _, k := range keywords {
 			a, err := env.GetAnalyzes(k.Name, time.Time{}, time.Now(), "any")
 			if err != nil {
-				log.Error(err)
+				log.Error(fmt.Errorf("GetAnalyzes in StartDispatching for %v failed on %v", k, err))
 				return
 			}
 			log.Info(fmt.Sprintf("Started analyzing: %v", k))

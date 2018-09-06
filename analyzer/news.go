@@ -31,19 +31,19 @@ func getNews(keyword, country, date, newsApiKey string) ([]text, error) {
 	}
 	req, err := http.NewRequest("GET", fmt.Sprintf("https://newsapi.org/v2/top-headlines?q=%v%v", keyword, countryParam), nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed on creating requests in getNews, %v", err)
 	}
 	req.Header.Add("X-Api-Key", newsApiKey)
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed on executing %v in getNews", req)
 	}
 	decoder := json.NewDecoder(resp.Body)
 	var nA newsApi
 	err = decoder.Decode(&nA)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed on decoding %v, in getNews, %v", resp.Body, err)
 	}
 	for _, a := range nA.Articles {
 		txt := fmt.Sprintf("%v %v", a.Title, a.Description)
