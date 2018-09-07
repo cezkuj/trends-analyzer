@@ -35,10 +35,10 @@ func getNews(keyword, country, date, newsApiKey string) ([]text, error) {
 	}
 	req.Header.Add("X-Api-Key", newsApiKey)
 	resp, err := client.Do(req)
-	defer resp.Body.Close()
 	if err != nil {
 		return nil, fmt.Errorf("Failed on executing %v in getNews", req)
 	}
+	defer resp.Body.Close()
 	decoder := json.NewDecoder(resp.Body)
 	var nA newsApi
 	err = decoder.Decode(&nA)

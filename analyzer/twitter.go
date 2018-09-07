@@ -36,10 +36,10 @@ func getTweets(keyword, lang, date, twitterApiKey string) ([]text, error) {
 	}
 	req.Header.Add("Authorization", twitterApiKey)
 	resp, err := client.Do(req)
-	defer resp.Body.Close()
 	if err != nil {
 		return nil, fmt.Errorf("Failed on executing %v in getTweets, %v", req, err)
 	}
+	defer resp.Body.Close()
 	decoder := json.NewDecoder(resp.Body)
 	var tA twitterApi
 	err = decoder.Decode(&tA)

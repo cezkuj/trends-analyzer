@@ -110,7 +110,7 @@ func keywords(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		keywords, err := env.GetKeywords()
 		if err != nil {
-			log.Error(fmt.Errorf("Call to GetKeywords failed in keywords", err))
+			log.Error(fmt.Errorf("Call to GetKeywords failed in keywords, %v", err))
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -229,32 +229,19 @@ func rates(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 		baseCur := vars["baseCur"]
 		cur := vars["cur"]
 		values := r.URL.Query()
-		startDateS := values.Get("startDate")
-		endDateS := values.Get("endDate")
-		var startDate time.Time
-		var endDate time.Time
-		var err error
-		if startDateS == "" {
-			startDate = time.Now()
-		} else {
-			startDateI, err := strconv.ParseInt(startDateS, 10, 64)
-			if err != nil {
-				log.Error(fmt.Errorf("Failed on parsing startDate timestamp, %v", err))
-				return
-			}
-			startDate = time.Unix(startDateI/1000, 0)
+		startDate, err := parseTimestamp(values.Get("startDate"))
+		if err != nil {
+			log.Error(fmt.Errorf("Failed on call to parseTimestamp, %v", err))
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
-		if endDateS == "" {
-			endDate = time.Now()
-		} else {
-			endDateI, err := strconv.ParseInt(endDateS, 10, 64)
-			if err != nil {
-				log.Error(fmt.Errorf("Failed on parsing endDate timestamp, %v", err))
-				return
-			}
-			endDate = time.Unix(endDateI/1000, 0)
+		endDate, err := parseTimestamp(values.Get("endDate"))
+		if err != nil {
+			log.Error(fmt.Errorf("Failed on call to parseTimestamp, %v", err))
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
 
-		}
 		ratesSeries, err := currency.GetRatesSeries(baseCur, cur, startDate, endDate)
 		if err != nil {
 			log.Error(fmt.Errorf("Call to GetRatesSeries failed in rates, %v", err))
@@ -269,6 +256,17 @@ func rates(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Write(ratesSeriesJSON)
 	}
+}
+
+func parseTimestamp(timeStr string) (time.Time, error) {
+	if timeStr == "" {
+		return time.Now(), nil
+	}
+	parsed, err := strconv.ParseInt(timeStr, 10, 64)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("Failed on parsing timestamp, %v", err)
+	}
+	return time.Unix(parsed/1000, 0), nil
 }
 
 func startProdServer(env db.Env) {
