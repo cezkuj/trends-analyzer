@@ -34,11 +34,10 @@ func GetRatesSeries(baseCur, cur string, startDate, endDate time.Time) (ratesSer
 	endDateS := getDate(endDate)
 	if baseCur == "PLN" {
 		rsNBP, err := callNBP(cur, startDateS, endDateS)
-		rr := make([]rate, len(rsNBP.Rates))
 		if err != nil {
 			return ratesSeries{}, fmt.Errorf("Failed on call to NBP. %v.", err)
 		}
-
+		rr := make([]rate, len(rsNBP.Rates))
 		for i, rs := range rsNBP.Rates {
 			date, err := time.Parse(time.RFC3339, rs.Date+"T00:00:00Z")
 			if err != nil {
@@ -65,7 +64,6 @@ func GetRatesSeries(baseCur, cur string, startDate, endDate time.Time) (ratesSer
 		rr[i] = rate{float64(int(10000*rsCurNBP.Rates[i].Mid/rsBaseNBP.Rates[i].Mid)) / 10000, date}
 	}
 	return ratesSeries{baseCur, cur, rr}, nil
-
 }
 
 func callNBP(cur, startDate, endDate string) (ratesSeriesNBP, error) {
