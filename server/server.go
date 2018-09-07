@@ -3,6 +3,7 @@ package server
 import (
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
 	"golang.org/x/crypto/acme/autocert"
@@ -41,6 +42,14 @@ func StartServer(dbCfg DbCfg, twitterApiKey, newsApiKey string, prod bool) {
 	startDevServer(env)
 }
 
+type analyzeParams struct {
+	keyword         string
+	keywordProvider string
+	date            string
+	country         string
+	textProvider    string
+}
+
 func analyze(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		decoder := json.NewDecoder(r.Body)
@@ -51,52 +60,57 @@ func analyze(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 			log.Error(fmt.Errorf("Failed on decoding in analyze, %v", err))
 			return
 		}
-		keyword, present := dat["keyword"]
-		if !present {
+		aP, err := parseBody(dat)
+		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			io.WriteString(w, "Keyword not present")
-			log.Error("Keyword not present in analyze")
+			log.Error(fmt.Errorf("Failed on parsing analyze parameters, %v", err))
 			return
 		}
-		date, present := dat["date"]
-		if !present {
-			date = "any"
-		} else if date != "today" {
-			w.WriteHeader(http.StatusBadRequest)
-			io.WriteString(w, fmt.Sprintf("Date %v not supported", date))
-			return
-		}
-
-		country, present := dat["country"]
-		if !present {
-			country = "any"
-		} else if country != "pl" && country != "gb" && country != "us" && country != "de" && country != "fr" {
-			w.WriteHeader(http.StatusBadRequest)
-			io.WriteString(w, fmt.Sprintf("Country %v not supported", country))
-			return
-		}
-
-		keywordProvider, present := dat["keywordProvider"]
-		if !present {
-			keywordProvider = "unknown"
-		}
-		k := db.NewKeyword(keyword, keywordProvider, "")
+		k := db.NewKeyword(aP.keyword, aP.keywordProvider, "")
 		err = env.CreateKeywordIfNotPresent(k)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			log.Error(fmt.Errorf("Call to CreateKeywordIfNotPresent in analyze, %v", err))
 			return
 		}
-		textProvider, present := dat["textProvider"]
-		if !present {
-			textProvider = "both"
-		}
-		if textProvider != "both" && textProvider != "twitter" && textProvider != "news" {
-			w.WriteHeader(http.StatusBadRequest)
-			io.WriteString(w, "Provider not recognized.")
-		}
-		go analyzer.Analyze(env, k.Name, textProvider, country, date)
+		go analyzer.Analyze(env, k.Name, aP.textProvider, aP.country, aP.date)
 	}
+}
+
+func parseBody(dat map[string]string) (analyzeParams, error) {
+	keyword, present := dat["keyword"]
+	if !present {
+		return analyzeParams{}, errors.New("Keyword not present in analyze")
+	}
+	date, present := dat["date"]
+	if !present {
+		date = "any"
+	} else if date != "today" {
+		return analyzeParams{}, fmt.Errorf("Date %v not supported", date)
+	}
+	country, present := dat["country"]
+	if !present {
+		country = "any"
+	} else if country != "pl" && country != "gb" && country != "us" && country != "de" && country != "fr" {
+		return analyzeParams{}, fmt.Errorf("Country %v not supported", country)
+	}
+	keywordProvider, present := dat["keywordProvider"]
+	if !present {
+		keywordProvider = "unknown"
+	}
+	textProvider, present := dat["textProvider"]
+	if !present {
+		textProvider = "both"
+	} else if textProvider != "twitter" && textProvider != "news" {
+		return analyzeParams{}, errors.New("Provider not recognized.")
+	}
+	return analyzeParams{
+		keyword:         keyword,
+		date:            date,
+		country:         country,
+		keywordProvider: keywordProvider,
+		textProvider:    textProvider,
+	}, nil
 }
 
 func status(env db.Env) func(w http.ResponseWriter, r *http.Request) {
