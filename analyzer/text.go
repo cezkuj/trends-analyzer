@@ -39,33 +39,19 @@ func clientWithTimeout(tlsSecure bool) (client http.Client) {
 }
 
 func Analyze(env db.Env, keyword, textProvider, country, date string) {
-	tt := []text{}
-	if textProvider == "twitter" || textProvider == "both" {
-		tweets, err := getTweets(keyword, country, date, env.TwitterApiKey)
-		if err != nil {
-			log.Error(fmt.Errorf("Failed on call to getTweets in Analyze, %v", err))
-			return
-		}
-		tt = append(tt, tweets...)
-	}
-	if textProvider == "news" || textProvider == "both" {
-		nn, err := getNews(keyword, country, date, env.NewsApiKey)
-		if err != nil {
-			log.Error(fmt.Errorf("Failed on call to getNews in Analyze, %v", err))
-			return
-		}
-		tt = append(tt, nn...)
+	tt, err := getText(env, keyword, textProvider, country, date)
+	if err != nil {
+		log.Error(fmt.Errorf("Analyze failed, %v", err))
+		return
 	}
 	c := make(chan analyzedText)
 	wg := new(sync.WaitGroup)
 	ctx := context.Background()
-
 	client, err := language.NewClient(ctx)
 	if err != nil {
 		log.Error(fmt.Errorf("Failed to create new language client, %v", err))
 		return
 	}
-
 	for _, t := range tt {
 		wg.Add(1)
 		go analyzeText(client, ctx, t, c, wg)
@@ -73,41 +59,64 @@ func Analyze(env db.Env, keyword, textProvider, country, date string) {
 	go func() {
 		wg.Wait()
 		close(c)
-
 	}()
-	stats := map[string]int{}
+	count := map[string]int{}
 	sums := map[string]float32{}
-	reactionTweets := float32(0)
-	reactionNews := float32(0)
-	reactionAvg := float32(0)
 	for t := range c {
-		stats[t.textProvider] += 1
+		count[t.textProvider]++
 		sums[t.textProvider] += t.reaction
 	}
-	if stats["twitter"] > 0 {
-		reactionTweets = sums["twitter"] / float32(stats["twitter"])
-		reactionAvg = reactionTweets
-	}
-	if stats["news"] > 0 {
-		reactionNews = sums["news"] / float32(stats["news"])
-		reactionAvg = reactionNews
-	}
-	if stats["twitter"] > 0 && stats["news"] > 0 {
-		reactionAvg = (sums["twitter"] + sums["news"]) / float32(stats["twitter"]+stats["news"])
-	}
+	reactionAvg, reactionTweets, reactionNews := calcReaction(count, sums)
 	keywordID, err := env.GetKeywordID(keyword)
 	if err != nil {
 		log.Error(fmt.Errorf("Failed on call to GetKeywordID for %v in Analyze, %v", keyword, err))
 		return
 	}
-	analyzis := db.NewAnalyzis(keywordID, country, time.Now(), stats["twitter"], stats["news"], reactionAvg, reactionTweets, reactionNews)
+	analyzis := db.NewAnalyzis(keywordID, country, time.Now(), count["twitter"], count["news"], reactionAvg, reactionTweets, reactionNews)
 	err = env.CreateAnalyzis(analyzis)
 	if err != nil {
 		log.Error(fmt.Errorf("Failed on call to CreateAnalyzes for %v in Analyze, %v", analyzis, err))
-
 	}
-
 }
+
+func getText(env db.Env, keyword, textProvider, country, date string) ([]text, error) {
+	tt := []text{}
+	if textProvider == "twitter" || textProvider == "both" {
+		tweets, err := getTweets(keyword, country, date, env.TwitterApiKey)
+		if err != nil {
+			return nil, fmt.Errorf("Failed on call to getTweets in Analyze, %v", err)
+		}
+		tt = append(tt, tweets...)
+	}
+	if textProvider == "news" || textProvider == "both" {
+		nn, err := getNews(keyword, country, date, env.NewsApiKey)
+		if err != nil {
+			return nil, fmt.Errorf("Failed on call to getNews in Analyze, %v", err)
+		}
+		tt = append(tt, nn...)
+	}
+	return tt, nil
+}
+
+func calcReaction(count map[string]int, sums map[string]float32) (float32, float32, float32) {
+	reactionTweets := float32(0)
+	reactionNews := float32(0)
+	reactionAvg := float32(0)
+
+	if count["twitter"] > 0 {
+		reactionTweets = sums["twitter"] / float32(count["twitter"])
+		reactionAvg = reactionTweets
+	}
+	if count["news"] > 0 {
+		reactionNews = sums["news"] / float32(count["news"])
+		reactionAvg = reactionNews
+	}
+	if count["twitter"] > 0 && count["news"] > 0 {
+		reactionAvg = (sums["twitter"] + sums["news"]) / float32(count["twitter"]+count["news"])
+	}
+	return reactionAvg, reactionTweets, reactionNews
+}
+
 func analyzeText(client *language.Client, ctx context.Context, t text, c chan analyzedText, wg *sync.WaitGroup) {
 	defer wg.Done()
 	s, err := analyzeSentiment(client, ctx, t.text)

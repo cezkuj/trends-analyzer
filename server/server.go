@@ -186,7 +186,6 @@ func analyzes(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Write(analyzesJSON)
 	}
-
 }
 
 func parseTime(timeStr string, defaultTime time.Time) (time.Time, error) {
