@@ -102,7 +102,7 @@ func TestGetAnalyzes(t *testing.T) {
 		0,
 		0,
 		float32(0.0),
-		float32(0.0),
+		float32(1.0),
 		float32(0.0),
 	)
 	err = env.CreateAnalyzis(a1)
@@ -115,7 +115,7 @@ func TestGetAnalyzes(t *testing.T) {
 		time.Date(2013, 1, 1, 12, 0, 0, 0, time.UTC),
 		0,
 		0,
-		float32(0.0),
+		float32(0.1),
 		float32(0.0),
 		float32(0.0),
 	)

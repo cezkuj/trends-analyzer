@@ -128,35 +128,20 @@ func keywords(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 func analyzes(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//Declaring variables beforehand, to bypass scoping problems with if - to refactor later on
-		var after time.Time
-		var before time.Time
-		var err error
-
 		vars := mux.Vars(r)
 		keyword := vars["keyword"]
 		values := r.URL.Query()
-		if afterStr := values.Get("after"); afterStr != "" {
-			after, err = time.Parse(time.RFC3339, afterStr)
-			if err != nil {
-				log.Error(fmt.Errorf("Failed on parsing %v in analyzes, %v", afterStr, err))
-				w.WriteHeader(http.StatusBadRequest)
-				return
-
-			}
-
-		} else {
-			after = time.Time{}
+		after, err := parseTime(values.Get("after"), time.Time{})
+		if err != nil {
+			log.Error(fmt.Errorf("Failed on call to parseTime in analyzes, %v", err))
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
-		if beforeStr := values.Get("before"); beforeStr != "" {
-			before, err = time.Parse(time.RFC3339, beforeStr)
-			if err != nil {
-				log.Error(fmt.Errorf("Failed on parsing %v in analyzes, %v", beforeStr, err))
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-
-		} else {
-			before = time.Now()
+		before, err := parseTime(values.Get("before"), time.Now())
+		if err != nil {
+			log.Error(fmt.Errorf("Failed on call to parseTime in analyzes, %v", err))
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
 		country := values.Get("country")
 		if country == "" {
@@ -188,6 +173,17 @@ func analyzes(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 		w.Write(analyzesJSON)
 	}
 
+}
+
+func parseTime(timeStr string, defaultTime time.Time) (time.Time, error) {
+	if timeStr == "" {
+		return defaultTime, nil
+	}
+	parsed, err := time.Parse(time.RFC3339, timeStr)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("Failed on parsing %v in analyzes, %v", timeStr, err)
+	}
+	return parsed, nil
 }
 
 func dispatcher(env db.Env) func(w http.ResponseWriter, r *http.Request) {
