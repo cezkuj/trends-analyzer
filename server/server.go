@@ -30,12 +30,12 @@ func NewDbCfg(user, pass, host, name string) DbCfg {
 	return DbCfg{user, pass, host, name}
 }
 
-func StartServer(dbCfg DbCfg, twitterApiKey, newsApiKey string, prod bool) {
+func StartServer(dbCfg DbCfg, twitterAPIKey, newsAPIKey string, prod bool) {
 	database, err := db.InitDb(dbCfg.user + ":" + dbCfg.pass + "@tcp(" + dbCfg.host + ")/" + dbCfg.name)
 	if err != nil {
 		log.Fatal(fmt.Errorf("Failed on InitDb in StartServer, %v", err))
 	}
-	env := db.NewEnv(database, twitterApiKey, newsApiKey)
+	env := db.NewEnv(database, twitterAPIKey, newsAPIKey)
 	if prod {
 		startProdServer(env)
 	}
@@ -102,7 +102,7 @@ func parseBody(dat map[string]string) (analyzeParams, error) {
 	if !present {
 		textProvider = "both"
 	} else if textProvider != "twitter" && textProvider != "news" {
-		return analyzeParams{}, errors.New("Provider not recognized.")
+		return analyzeParams{}, errors.New("provider not recognized")
 	}
 	return analyzeParams{
 		keyword:         keyword,

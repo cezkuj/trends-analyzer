@@ -16,8 +16,8 @@ var (
 	dbHost        string
 	dbName        string
 	prod          bool
-	twitterApiKey string
-	newsApiKey    string
+	twitterAPIKey string
+	newsAPIKey    string
 	verbose       bool
 )
 
@@ -37,7 +37,7 @@ func startServer(cmd *cobra.Command, args []string) {
 		log.SetLevel(log.DebugLevel)
 	}
 	dbCfg := server.NewDbCfg(dbUser, dbPass, dbHost, dbName)
-	server.StartServer(dbCfg, twitterApiKey, newsApiKey, prod)
+	server.StartServer(dbCfg, twitterAPIKey, newsAPIKey, prod)
 
 }
 func Execute() {
@@ -48,9 +48,9 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.Flags().StringVarP(&twitterApiKey, "twitter-api-key", "t", "", "Twitter API key.")
+	rootCmd.Flags().StringVarP(&twitterAPIKey, "twitter-api-key", "t", "", "Twitter API key.")
 	rootCmd.MarkFlagRequired("twitter-api-key")
-	rootCmd.Flags().StringVarP(&newsApiKey, "news-api-key", "n", "", "News API key.")
+	rootCmd.Flags().StringVarP(&newsAPIKey, "news-api-key", "n", "", "News API key.")
 	rootCmd.MarkFlagRequired("news-api-key")
 	rootCmd.Flags().StringVarP(&dbUser, "user", "u", "", "Sets user for database conneciton, required")
 	rootCmd.MarkFlagRequired("user")

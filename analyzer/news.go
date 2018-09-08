@@ -10,7 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type newsApi struct {
+type newsAPI struct {
 	Status       string    `json:"status"`
 	TotalResults int       `json:"totalResults"`
 	Articles     []article `json:"articles"`
@@ -22,7 +22,7 @@ type article struct {
 	PublishedAt time.Time `json:"publishedAt"`
 }
 
-func getNews(keyword, country, date, newsApiKey string) ([]text, error) {
+func getNews(keyword, country, date, newsAPIKey string) ([]text, error) {
 	tt := []text{}
 	client := clientWithTimeout(false)
 	countryParam := ""
@@ -33,14 +33,14 @@ func getNews(keyword, country, date, newsApiKey string) ([]text, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Failed on creating requests in getNews, %v", err)
 	}
-	req.Header.Add("X-Api-Key", newsApiKey)
+	req.Header.Add("X-Api-Key", newsAPIKey)
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("Failed on executing %v in getNews", req)
 	}
 	defer resp.Body.Close()
 	decoder := json.NewDecoder(resp.Body)
-	var nA newsApi
+	var nA newsAPI
 	err = decoder.Decode(&nA)
 	if err != nil {
 		return nil, fmt.Errorf("Failed on decoding %v, in getNews, %v", resp.Body, err)

@@ -7,15 +7,18 @@ import (
 )
 
 const (
-	DB_CONNECTION = "ta:trends_analyzer@tcp(127.0.0.1:3306)/trends"
+	DbConnection = "ta:trends_analyzer@tcp(127.0.0.1:3306)/trends"
 )
 
-func truncateTable(table_name string) {
-	db, err := InitDb(DB_CONNECTION)
+func truncateTable(tableName string) {
+	db, err := InitDb(DbConnection)
 	if err != nil {
 		log.Fatal(err)
 	}
-	db.Exec("TRUNCATE TABLE " + table_name)
+	_, err = db.Exec("TRUNCATE TABLE " + tableName)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func TestKeywordIsNotPresent(t *testing.T) {
@@ -55,6 +58,9 @@ func TestGetKeywords(t *testing.T) {
 		t.Fatal(err)
 	}
 	keywords, err := env.GetKeywordsWithName(keyword1.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if keywords[0].Name != keyword1.Name {
 		t.Fatal("Keywords name not equal")
 	}
@@ -91,12 +97,12 @@ func TestGetAnalyzes(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	keyword_id, err := env.GetKeywordID(keyword1.Name)
+	keywordID, err := env.GetKeywordID(keyword1.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
 	a1 := NewAnalyzis(
-		keyword_id,
+		keywordID,
 		"us",
 		time.Date(2009, 1, 1, 12, 0, 0, 0, time.UTC),
 		0,
@@ -110,7 +116,7 @@ func TestGetAnalyzes(t *testing.T) {
 		t.Fatal(err)
 	}
 	a2 := NewAnalyzis(
-		keyword_id,
+		keywordID,
 		"us",
 		time.Date(2013, 1, 1, 12, 0, 0, 0, time.UTC),
 		0,
@@ -124,26 +130,38 @@ func TestGetAnalyzes(t *testing.T) {
 		t.Fatal(err)
 	}
 	analyzes, err := env.GetAnalyzes(keyword1.Name, time.Date(2000, 1, 1, 12, 0, 0, 0, time.UTC), time.Date(2020, 1, 1, 12, 0, 0, 0, time.UTC), "us")
+	if err != nil {
+		t.Fatal(err)
+	}
 	if a1 != analyzes[0] || a2 != analyzes[1] {
 		t.Fatal("Wrong analyzes in 2000-2020 query")
 	}
 	analyzes, err = env.GetAnalyzes(keyword1.Name, time.Date(2020, 1, 1, 12, 0, 0, 0, time.UTC), time.Date(2020, 1, 1, 12, 0, 0, 0, time.UTC), "us")
+	if err != nil {
+		t.Fatal(err)
+	}
 	if len(analyzes) != 0 {
 		t.Fatal("Wrong analyzes in 2020-2020 query")
 	}
 	analyzes, err = env.GetAnalyzes(keyword1.Name, time.Date(2011, 1, 1, 12, 0, 0, 0, time.UTC), time.Date(2016, 1, 1, 12, 0, 0, 0, time.UTC), "us")
+	if err != nil {
+		t.Fatal(err)
+	}
 	if a2 != analyzes[0] {
 		t.Fatal("Wrong analyzes in 2011-2016 query")
 	}
 	analyzes, err = env.GetAnalyzes(keyword1.Name, time.Date(2009, 1, 1, 12, 0, 0, 0, time.UTC), time.Date(2012, 1, 1, 12, 0, 0, 0, time.UTC), "us")
+	if err != nil {
+		t.Fatal(err)
+	}
 	if a1 != analyzes[0] {
 		t.Fatal("Wrong analyzes in 2009-2012 query")
 	}
 	cleanUp()
-
 }
+
 func setupEnv() Env {
-	db, err := InitDb(DB_CONNECTION)
+	db, err := InitDb(DbConnection)
 	if err != nil {
 		log.Fatal(err)
 	}

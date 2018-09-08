@@ -10,11 +10,11 @@ import (
 //TODO: add mocks (wiremock?)
 func TestGetNews(t *testing.T) {
 	log.SetLevel(log.DebugLevel)
-	newsApiKey := os.Getenv("NEWSAPIKEY")
-	if newsApiKey == "" {
-		t.Fatal("NewsApiKey not set")
+	newsAPIKey := os.Getenv("NEWSAPIKEY")
+	if newsAPIKey == "" {
+		t.Fatal("NewsAPIKey not set")
 	}
-	_, err := getNews("Trump", "any", "any", newsApiKey)
+	_, err := getNews("Trump", "any", "any", newsAPIKey)
 	if err != nil {
 		t.Fatal(err)
 	}

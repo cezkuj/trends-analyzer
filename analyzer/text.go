@@ -54,7 +54,7 @@ func Analyze(env db.Env, keyword, textProvider, country, date string) {
 	}
 	for _, t := range tt {
 		wg.Add(1)
-		go analyzeText(client, ctx, t, c, wg)
+		go analyzeText(ctx, client, t, c, wg)
 	}
 	go func() {
 		wg.Wait()
@@ -82,14 +82,14 @@ func Analyze(env db.Env, keyword, textProvider, country, date string) {
 func getText(env db.Env, keyword, textProvider, country, date string) ([]text, error) {
 	tt := []text{}
 	if textProvider == "twitter" || textProvider == "both" {
-		tweets, err := getTweets(keyword, country, date, env.TwitterApiKey)
+		tweets, err := getTweets(keyword, country, date, env.TwitterAPIKey)
 		if err != nil {
 			return nil, fmt.Errorf("Failed on call to getTweets in Analyze, %v", err)
 		}
 		tt = append(tt, tweets...)
 	}
 	if textProvider == "news" || textProvider == "both" {
-		nn, err := getNews(keyword, country, date, env.NewsApiKey)
+		nn, err := getNews(keyword, country, date, env.NewsAPIKey)
 		if err != nil {
 			return nil, fmt.Errorf("Failed on call to getNews in Analyze, %v", err)
 		}
@@ -117,9 +117,9 @@ func calcReaction(count map[string]int, sums map[string]float32) (float32, float
 	return reactionAvg, reactionTweets, reactionNews
 }
 
-func analyzeText(client *language.Client, ctx context.Context, t text, c chan analyzedText, wg *sync.WaitGroup) {
+func analyzeText(ctx context.Context, client *language.Client, t text, c chan analyzedText, wg *sync.WaitGroup) {
 	defer wg.Done()
-	s, err := analyzeSentiment(client, ctx, t.text)
+	s, err := analyzeSentiment(ctx, client, t.text)
 	if err != nil {
 		log.Error(fmt.Errorf("Failed on call to analyzeSentiment, %v", err))
 		return
@@ -127,7 +127,7 @@ func analyzeText(client *language.Client, ctx context.Context, t text, c chan an
 	c <- analyzedText{s, t.textProvider, t.timestamp}
 
 }
-func analyzeSentiment(client *language.Client, ctx context.Context, text string) (float32, error) {
+func analyzeSentiment(ctx context.Context, client *language.Client, text string) (float32, error) {
 	sentiment, err := client.AnalyzeSentiment(ctx, &languagepb.AnalyzeSentimentRequest{
 		Document: &languagepb.Document{
 			Source: &languagepb.Document_Content{

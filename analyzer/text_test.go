@@ -15,7 +15,7 @@ func TestAnalyzeSentiment(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	sent, err := analyzeSentiment(client, ctx, "I am happy.")
+	sent, err := analyzeSentiment(ctx, client, "I am happy.")
 	if err != nil {
 		t.Fatal(err)
 	}

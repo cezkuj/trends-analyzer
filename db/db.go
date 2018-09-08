@@ -6,18 +6,19 @@ import (
 	"fmt"
 	"time"
 
+	//import mysql driver
 	_ "github.com/go-sql-driver/mysql"
 	log "github.com/sirupsen/logrus"
 )
 
 type Env struct {
 	db            *sql.DB
-	TwitterApiKey string
-	NewsApiKey    string
+	TwitterAPIKey string
+	NewsAPIKey    string
 }
 
-func NewEnv(db *sql.DB, twitterApiKey, newsApiKey string) Env {
-	return Env{db, twitterApiKey, newsApiKey}
+func NewEnv(db *sql.DB, twitterAPIKey, newsAPIKey string) Env {
+	return Env{db, twitterAPIKey, newsAPIKey}
 }
 
 type Analyzis struct {

@@ -10,11 +10,11 @@ import (
 //TODO: add mocks (wiremock?)
 func TestGetTweets(t *testing.T) {
 	log.SetLevel(log.DebugLevel)
-	twitterApiKey := os.Getenv("TWITTERAPIKEY")
-	if twitterApiKey == "" {
-		t.Fatal("TwitterApiKey not set")
+	twitterAPIKey := os.Getenv("TWITTERAPIKEY")
+	if twitterAPIKey == "" {
+		t.Fatal("TwitterAPIKey not set")
 	}
-	tweets, err := getTweets("Trump", "any", "any", twitterApiKey)
+	tweets, err := getTweets("Trump", "any", "any", twitterAPIKey)
 	log.Debug(tweets)
 	if err != nil {
 		t.Fatal(err)
