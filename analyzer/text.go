@@ -82,14 +82,16 @@ func Analyze(env db.Env, keyword, textProvider, country, date string) {
 func getText(env db.Env, keyword, textProvider, country, date string) ([]text, error) {
 	tt := []text{}
 	if textProvider == "twitter" || textProvider == "both" {
-		tweets, err := getTweets(keyword, country, date, env.TwitterAPIKey)
+		c := twitterClient{TwitterAPIUrl, env.TwitterAPIKey, clientWithTimeout(true)}
+		tweets, err := c.getTweets(keyword, country, date)
 		if err != nil {
 			return nil, fmt.Errorf("Failed on call to getTweets in Analyze, %v", err)
 		}
 		tt = append(tt, tweets...)
 	}
 	if textProvider == "news" || textProvider == "both" {
-		nn, err := getNews(keyword, country, date, env.NewsAPIKey)
+		c := newsClient{NewsAPIUrl, env.NewsAPIKey, clientWithTimeout(true)}
+		nn, err := c.getNews(keyword, country, date)
 		if err != nil {
 			return nil, fmt.Errorf("Failed on call to getNews in Analyze, %v", err)
 		}

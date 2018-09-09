@@ -9,8 +9,18 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	TwitterAPIUrl = "https://api.twitter.com"
+)
+
 type twitterAPI struct {
 	Statuses []status `json:"statuses"`
+}
+
+type twitterClient struct {
+	twitterAPIUrl string
+	twitterAPIKey string
+	httpClient    http.Client
 }
 
 type status struct {
@@ -20,9 +30,8 @@ type status struct {
 	Text      string `json:"text"`
 }
 
-func getTweets(keyword, lang, date, twitterAPIKey string) ([]text, error) {
+func (c twitterClient) getTweets(keyword, lang, date string) ([]text, error) {
 	tt := []text{}
-	client := clientWithTimeout(false)
 	langParam := ""
 	if lang != "any" {
 		if lang == "gb" || lang == "us" {
@@ -30,12 +39,12 @@ func getTweets(keyword, lang, date, twitterAPIKey string) ([]text, error) {
 		}
 		langParam = fmt.Sprintf("&lang=%v", lang)
 	}
-	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.twitter.com/1.1/search/tweets.json?q=%v%v&count=100", keyword, langParam), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%v/1.1/search/tweets.json?q=%v%v&count=100", c.twitterAPIUrl, keyword, langParam), nil)
 	if err != nil {
 		return nil, fmt.Errorf("Failed on creating twitter request in getTweets, %v", err)
 	}
-	req.Header.Add("Authorization", twitterAPIKey)
-	resp, err := client.Do(req)
+	req.Header.Add("Authorization", c.twitterAPIKey)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("Failed on executing %v in getTweets, %v", req, err)
 	}

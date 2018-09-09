@@ -14,7 +14,8 @@ func TestGetNews(t *testing.T) {
 	if newsAPIKey == "" {
 		t.Fatal("NewsAPIKey not set")
 	}
-	_, err := getNews("Trump", "any", "any", newsAPIKey)
+	c := newsClient{NewsAPIUrl, newsAPIKey, clientWithTimeout(false)}
+	_, err := c.getNews("Trump", "any", "any")
 	if err != nil {
 		t.Fatal(err)
 	}

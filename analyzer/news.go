@@ -10,6 +10,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	NewsAPIUrl = "https://newsapi.org"
+)
+
 type newsAPI struct {
 	Status       string    `json:"status"`
 	TotalResults int       `json:"totalResults"`
@@ -22,19 +26,24 @@ type article struct {
 	PublishedAt time.Time `json:"publishedAt"`
 }
 
-func getNews(keyword, country, date, newsAPIKey string) ([]text, error) {
+type newsClient struct {
+	newsAPIUrl string
+	newsAPIKey string
+	httpClient http.Client
+}
+
+func (c newsClient) getNews(keyword, country, date string) ([]text, error) {
 	tt := []text{}
-	client := clientWithTimeout(false)
 	countryParam := ""
 	if country != "any" {
 		countryParam = fmt.Sprintf("&country=%v", country)
 	}
-	req, err := http.NewRequest("GET", fmt.Sprintf("https://newsapi.org/v2/top-headlines?q=%v%v", keyword, countryParam), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%v/v2/top-headlines?q=%v%v", c.newsAPIUrl, keyword, countryParam), nil)
 	if err != nil {
 		return nil, fmt.Errorf("Failed on creating requests in getNews, %v", err)
 	}
-	req.Header.Add("X-Api-Key", newsAPIKey)
-	resp, err := client.Do(req)
+	req.Header.Add("X-Api-Key", c.newsAPIKey)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("Failed on executing %v in getNews", req)
 	}

@@ -14,7 +14,8 @@ func TestGetTweets(t *testing.T) {
 	if twitterAPIKey == "" {
 		t.Fatal("TwitterAPIKey not set")
 	}
-	tweets, err := getTweets("Trump", "any", "any", twitterAPIKey)
+	c := twitterClient{TwitterAPIUrl, twitterAPIKey, clientWithTimeout(false)}
+	tweets, err := c.getTweets("Trump", "any", "any")
 	log.Debug(tweets)
 	if err != nil {
 		t.Fatal(err)
