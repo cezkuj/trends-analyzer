@@ -1,21 +1,29 @@
 package analyzer
 
 import (
+	"net/http"
 	"os"
 	"testing"
 
 	log "github.com/sirupsen/logrus"
 )
 
-//TODO: add mocks (wiremock?)
-func TestGetNews(t *testing.T) {
-	log.SetLevel(log.DebugLevel)
-	newsAPIKey := os.Getenv("NEWSAPIKEY")
-	if newsAPIKey == "" {
-		t.Fatal("NewsAPIKey not set")
+type mockClient struct {
+	file string
+}
+
+func (c mockClient) Do(req *http.Request) (*http.Response, error) {
+	file, err := os.Open(c.file)
+	if err != nil {
+		log.Fatal(err)
 	}
-	c := newsClient{NewsAPIUrl, newsAPIKey, clientWithTimeout(false)}
-	_, err := c.getNews("Trump", "any", "any")
+	return &http.Response{Body: file}, nil
+}
+
+func TestGetNews(t *testing.T) {
+	c := apiClient{NewsAPIUrl, "", mockClient{"examples/news.json"}}
+	nn, err := c.getNews("Trump", "any", "any")
+	log.Info(nn)
 	if err != nil {
 		t.Fatal(err)
 	}

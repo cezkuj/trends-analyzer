@@ -1,0 +1,246 @@
+{
+    "status": "ok",
+    "totalResults": 20,
+    "articles": [
+        {
+            "source": {
+                "id": "usa-today",
+                "name": "USA Today"
+            },
+            "author": "Deirdre Shesgreen",
+            "title": "Trump administration to sanction International Criminal Court, ban judges from US",
+            "description": "Human rights advocates and others  bashed the sanctions against the ICC and decision to close Palestinian office in Washington.",
+            "url": "https://www.usatoday.com/story/news/world/2018/09/10/palestinians-say-trump-bullying-them-closure-washington-office/1254466002/",
+            "urlToImage": "https://www.gannett-cdn.com/-mm-/8d51f37c4b4267c0158ea3eab66113ff4c965552/c=0-99-3189-1900/local/-/media/2018/04/13/USATODAY/USATODAY/636592532484524713-AFP-AFP-1404VT.jpg?width=3200&height=1680&fit=crop",
+            "publishedAt": "2018-09-10T20:29:44Z"
+        },
+        {
+            "source": {
+                "id": null,
+                "name": "Rollingstone.com"
+            },
+            "author": "Tim Dickinson, Tim Dickinson",
+            "title": "Documents Reveal Maria Butina Has Offered to Betray Her Lover (a GOP Operative)",
+            "description": "Music, Film, TV and Political News Coverage",
+            "url": "https://www.rollingstone.com/politics/politics-news/maria-butina-flip-722203/",
+            "urlToImage": null,
+            "publishedAt": "2018-09-10T20:24:00Z"
+        },
+        {
+            "source": {
+                "id": null,
+                "name": "Etonline.com"
+            },
+            "author": "Antoinette Bueno\u200d",
+            "title": "Nicki Minaj Breaks Silence on Cardi B Brawl: I Was 'Humiliated'",
+            "description": "Nicki Minaj is opening up about the headline-making fight between she and fellow rapper Cardi B.",
+            "url": "https://www.etonline.com/nicki-minaj-breaks-silence-on-cardi-b-brawl-i-was-humiliated-109328",
+            "urlToImage": "http://www.etonline.com/sites/default/files/styles/max_1280x720/public/images/2018-09/cardi_B_nicki_minaj_getty.jpg?itok=8IPD1yQv",
+            "publishedAt": "2018-09-10T19:49:00Z"
+        },
+        {
+            "source": {
+                "id": "cnn",
+                "name": "CNN"
+            },
+            "author": "Salma Abdelaziz, Clarissa Ward and Waffa Munayyer, CNN",
+            "title": "Rescuer hit in airstrike keeps filming to capture the horror in Syria's Idlib",
+            "description": "Anas al-Diab is used to being a rescuer, but on Friday he became a victim as Syrian airstrikes pounded Idlib province, the country's last major rebel-held area.",
+            "url": "https://www.cnn.com/2018/09/10/middleeast/syria-idlib-white-helmets-intl/index.html",
+            "urlToImage": "https://cdn.cnn.com/cnnnext/dam/assets/180910164629-03-idlib-white-helmets-super-tease.jpg",
+            "publishedAt": "2018-09-10T19:49:00Z"
+        },
+        {
+            "source": {
+                "id": "nbc-news",
+                "name": "NBC News"
+            },
+            "author": "Elizabeth Chuck",
+            "title": "Mandatory evacuations ordered for entire South Carolina coastline ahead of Hurricane Florence",
+            "description": "South Carolina’s governor has ordered evacuations along South Carolina’s entire coastline as of noon Tuesday, as Hurricane Florence barrels toward the Southeast as a Category 4 storm.",
+            "url": "https://www.nbcnews.com/news/weather/hurricane-florence-strengthens-category-3-storm-eyes-southeast-n908131",
+            "urlToImage": "https://media4.s-nbcnews.com/j/newscms/2018_37/2560836/180910-hurricane-florence-mn-1005_762009e8de7613d40a81ebeb20b37bf4.1200;630;7;70;5.jpg",
+            "publishedAt": "2018-09-10T19:47:39Z"
+        },
+        {
+            "source": {
+                "id": "cbs-news",
+                "name": "CBS News"
+            },
+            "author": "Caitlin O'Kane",
+            "title": "Georgia school reinstating paddling to punish students",
+            "description": "A school in Hephzibah, Georgia, sent parents a consent form, informing them that \"paddling\" students on the buttocks with a piece of wood will now be a form of punishment",
+            "url": "https://www.cbsnews.com/news/georgia-school-reinstating-paddling-to-punish-students/",
+            "urlToImage": "https://cbsnews1.cbsistatic.com/hub/i/r/2018/09/10/438bded4-f1cb-444d-a423-4a98c253b7e6/thumbnail/1200x630/a12348259618813f720e2603c5c6cad5/screen-shot-2018-09-10-at-3-14-00-pm.png",
+            "publishedAt": "2018-09-10T19:45:00Z"
+        },
+        {
+            "source": {
+                "id": null,
+                "name": "Rollingstone.com"
+            },
+            "author": "Tessa Stuart, Tessa Stuart",
+            "title": "The GOP Is Sweating Bullets Over Beto O'Rourke",
+            "description": "Music, Film, TV and Political News Coverage",
+            "url": "https://www.rollingstone.com/politics/politics-news/beto-texas-cruz-722156/",
+            "urlToImage": null,
+            "publishedAt": "2018-09-10T19:42:22Z"
+        },
+        {
+            "source": {
+                "id": "cnn",
+                "name": "CNN"
+            },
+            "author": "Zachary Cohen and Jamie Crawford, CNN",
+            "title": "Trump open to meeting North Korea's Kim again despite lack of denuclearization progress",
+            "description": "White House press secretary Sarah Sanders said Monday that President Donald Trump is open to another meeting with North Korean dictator Kim Jong Un despite national security adviser John Bolton's assertion that the US is still waiting for Pyongyang to take st…",
+            "url": "https://www.cnn.com/2018/09/10/politics/bolton-trump-north-korea-denuclearize-waiting/index.html",
+            "urlToImage": "https://cdn.cnn.com/cnnnext/dam/assets/180517121909-01-john-bolton-file-super-tease.jpg",
+            "publishedAt": "2018-09-10T19:41:13Z"
+        },
+        {
+            "source": {
+                "id": "the-washington-post",
+                "name": "The Washington Post"
+            },
+            "author": null,
+            "title": "Trump's top economist says he can't explain Trump's false tweet on the economy",
+            "description": "",
+            "url": "https://www.washingtonpost.com/business/economy/trumps-top-economist-says-he-cant-explain-trumps-false-tweet-on-the-economy/2018/09/10/ef0a5f1a-b529-11e8-a2c5-3187f427e253_story.html",
+            "urlToImage": "https://www.washingtonpost.com/resizer/AHUE60HvyVcZq47EkoNk2dibEyk=/1484x0/arc-anglerfish-washpost-prod-washpost.s3.amazonaws.com/public/U7LTVKVVFYI6RFHLHPKS37URPM.jpg",
+            "publishedAt": "2018-09-10T19:22:45Z"
+        },
+        {
+            "source": {
+                "id": "cbs-news",
+                "name": "CBS News"
+            },
+            "author": "Andrea Park",
+            "title": "Hosts of \"The Talk\" address Leslie Moonves' exit from CBS",
+            "description": "Co-host Julie Chen, Moonves' wife, was notably absent from the live show, saying in a statement that she was \"taking a few days off\" to be with family",
+            "url": "https://www.cbsnews.com/news/hosts-of-the-talk-address-leslie-moonves-exit-from-cbs/",
+            "urlToImage": "https://cbsnews2.cbsistatic.com/hub/i/r/2018/06/04/f25789ac-bf0d-45c9-9ce7-45a3c9d6211c/thumbnail/1200x630g2/87e3c70429c92064d9807b0053161fe2/111477-0954b4.jpg",
+            "publishedAt": "2018-09-10T18:56:23Z"
+        },
+        {
+            "source": {
+                "id": "abc-news",
+                "name": "ABC News"
+            },
+            "author": "Emily Shapiro",
+            "title": "Wife allegedly kills estranged husband in front of daughter at Walmart parking lot",
+            "description": "Kayla Coutee was charged with second-degree murder after the Saturday shooting.",
+            "url": "https://abcnews.go.com/US/wife-allegedly-kills-estranged-husband-walmart-parking-lot/story?id=57722050",
+            "urlToImage": "https://s.abcnews.com/images/US/kayla-coutee-mugshot-ht-thg-180910_hpMain_16x9_992.jpg",
+            "publishedAt": "2018-09-10T18:53:00Z"
+        },
+        {
+            "source": {
+                "id": null,
+                "name": "Rollingstone.com"
+            },
+            "author": "Brittany Spanos, Brittany Spanos",
+            "title": "'You Did This To Him': Ariana Grande, Mac Miller and the Demonization of Women in Toxic Relationships",
+            "description": "Music, Film, TV and Political News Coverage",
+            "url": "https://www.rollingstone.com/music/music-features/mac-miller-death-ariana-grande-mac-miller-social-media-721843/",
+            "urlToImage": null,
+            "publishedAt": "2018-09-10T18:40:31Z"
+        },
+        {
+            "source": {
+                "id": "cnn",
+                "name": "CNN"
+            },
+            "author": "AnneClaire Stapleton, Darran Simon and Eliott C. McLaughlin, CNN",
+            "title": "Dallas police officer could face stiffer charge for killing unarmed neighbor, DA says",
+            "description": "A Dallas police officer stands charged with manslaughter in the fatal shooting of a man she mistakenly thought was in her apartment, but a prosecutor would not rule out a more serious charge Monday.",
+            "url": "https://www.cnn.com/2018/09/10/us/dallas-police-officer-amber-guyger-arrest/index.html",
+            "urlToImage": "https://cdn.cnn.com/cnnnext/dam/assets/180909202629-amber-guyger-botham-shem-jean-split-super-tease.jpg",
+            "publishedAt": "2018-09-10T18:17:00Z"
+        },
+        {
+            "source": {
+                "id": "politico",
+                "name": "Politico"
+            },
+            "author": "JEREMY B. WHITE",
+            "title": "California's Brown signs renewable energy bill in another rebuke to Trump",
+            "description": "The law mandates that the state‘s retail electricity come from renewable sources by 2045.",
+            "url": "https://www.politico.com/story/2018/09/10/california-renewable-energy-trump-brown-813660",
+            "urlToImage": "https://static.politico.com/c3/05/4a228d114d49bdabf5cdc6ee0e32/180910-jerry-brown-gty-773.jpg",
+            "publishedAt": "2018-09-10T18:06:00Z"
+        },
+        {
+            "source": {
+                "id": "the-new-york-times",
+                "name": "The New York Times"
+            },
+            "author": "https://www.nytimes.com/by/victor-mather",
+            "title": "The Coaching Rule That Upset Serena Williams, Explained",
+            "description": "Grand Slam tournaments like the United States Open prohibit players from receiving coaching from off the court. But what constitutes coaching has long vexed players.",
+            "url": "https://www.nytimes.com/2018/09/10/sports/the-coaching-rule-that-upset-serena-williams-explained.html",
+            "urlToImage": "https://static01.nyt.com/images/2018/09/11/sports/11tenniscoaching/11tenniscoaching-facebookJumbo.jpg",
+            "publishedAt": "2018-09-10T18:02:05Z"
+        },
+        {
+            "source": {
+                "id": "the-washington-post",
+                "name": "The Washington Post"
+            },
+            "author": "https://www.facebook.com/madebonis",
+            "title": "GOP Rep. Ron DeSantis, running for Florida governor, resigns from House",
+            "description": "DeSantis, who has missed more than half of House votes since July, said it would be “inappropriate” to collect his congressional paycheck while seeking higher office.",
+            "url": "https://www.washingtonpost.com/powerpost/gop-rep-ron-desantis-running-for-florida-governor-resigns-from-house/2018/09/10/8b62e82e-b510-11e8-a2c5-3187f427e253_story.html",
+            "urlToImage": "https://www.washingtonpost.com/resizer/kDHMHwZy28elEUctZ1YZtjQH6x4=/1484x0/arc-anglerfish-washpost-prod-washpost.s3.amazonaws.com/public/5GXKEIVVCII6RIWFGGD7IJ7CKM.jpg",
+            "publishedAt": "2018-09-10T16:11:41Z"
+        },
+        {
+            "source": {
+                "id": null,
+                "name": "Cnet.com"
+            },
+            "author": "Justin Jaffe",
+            "title": "iPhone XR, iPhone XS Max, iPad Pros, Macs and more: Everything Apple could announce on Sept. 12",
+            "description": "Apple's pipeline may include an iPhone XS, iPhone XS Max and iPhone XR -- plus a new iPad Pro, MacBook, Apple Watch and more.",
+            "url": "https://www.cnet.com/news/iphone-xr-iphone-xs-max-ipad-pros-macs-and-more-everything-apple-could-announce-on-sept-12/",
+            "urlToImage": "https://cnet3.cbsistatic.com/img/W83cz4U4TyQNeBwt1yopLsWFp0c=/2018/07/27/41af5b5c-ea99-4d0d-8f99-1afe7f099a2d/iphone-8-iphone-x-5881.jpg",
+            "publishedAt": "2018-09-10T15:15:47Z"
+        },
+        {
+            "source": {
+                "id": null,
+                "name": "Kuow.org"
+            },
+            "author": "Philip Ewing",
+            "title": "The Russia Investigations: Can There Be A Final Answer On 'Collusion'?",
+            "description": "Trump attorneys and the special counsel's office have been discussing a possible interview. But leaks of a new book reveal an ex-Trump lawyer has argued the president should never agree to a sit-down.",
+            "url": "https://kuow.org/stories/the-russia-investigations-can-there-be-a-final-answer-on-collusion",
+            "urlToImage": null,
+            "publishedAt": "2018-09-10T14:38:11Z"
+        },
+        {
+            "source": {
+                "id": "the-washington-post",
+                "name": "The Washington Post"
+            },
+            "author": null,
+            "title": "Why a far-right party with white supremacist roots is on the rise — in Sweden",
+            "description": "The Sweden Democrats are riding a wave of public concern about immigration.",
+            "url": "https://www.washingtonpost.com/news/monkey-cage/wp/2018/09/10/why-a-far-right-party-with-white-supremacist-roots-is-on-the-rise-in-sweden/",
+            "urlToImage": "https://www.washingtonpost.com/resizer/KzkmFX8qZ7fKuOicDlSx7w6Gk7I=/1484x0/arc-anglerfish-washpost-prod-washpost.s3.amazonaws.com/public/SOMDMB6HIYZSTJYOHUJBPGMQSY.jpg",
+            "publishedAt": "2018-09-10T11:04:27Z"
+        },
+        {
+            "source": {
+                "id": null,
+                "name": "Bostonglobe.com"
+            },
+            "author": "Felicia Gans - Reporter",
+            "title": "A complete list of New England schools' rankings from US News & World Report",
+            "description": "A look at where New England colleges and universities ranked on the list, which was released Monday.",
+            "url": "https://www.bostonglobe.com/metro/2018/09/10/complete-list-new-england-schools-rankings-from-news-world-report/TnCAWNG0ptn7r31YAcU4OI/story.html",
+            "urlToImage": "https://www.bostonglobe.com/rf/image_585w/Boston/2011-2020/2017/02/17/BostonGlobe.com/Business/Images/MIT-Dome-Christopher-Harting-e1449701791409.jpg",
+            "publishedAt": "2018-09-10T09:10:11Z"
+        }
+    ]
+}
