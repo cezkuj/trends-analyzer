@@ -15,6 +15,16 @@ import (
 	"github.com/cezkuj/trends-analyzer/db"
 )
 
+type apiClient struct {
+	apiUrl string
+	apiKey string
+	httpClient
+}
+
+type httpClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
 type text struct {
 	id           int
 	text         string
@@ -28,13 +38,13 @@ type analyzedText struct {
 	timestamp    time.Time
 }
 
-func clientWithTimeout(tlsSecure bool) (client http.Client) {
+func clientWithTimeout(tlsSecure bool) (client *http.Client) {
 	timeout := 30 * time.Second
 	//Default http client does not have timeout
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: !tlsSecure},
 	}
-	return http.Client{Timeout: timeout, Transport: tr}
+	return &http.Client{Timeout: timeout, Transport: tr}
 
 }
 
@@ -82,7 +92,7 @@ func Analyze(env db.Env, keyword, textProvider, country, date string) {
 func getText(env db.Env, keyword, textProvider, country, date string) ([]text, error) {
 	tt := []text{}
 	if textProvider == "twitter" || textProvider == "both" {
-		c := twitterClient{TwitterAPIUrl, env.TwitterAPIKey, clientWithTimeout(true)}
+		c := apiClient{TwitterAPIUrl, env.TwitterAPIKey, clientWithTimeout(true)}
 		tweets, err := c.getTweets(keyword, country, date)
 		if err != nil {
 			return nil, fmt.Errorf("Failed on call to getTweets in Analyze, %v", err)
@@ -90,7 +100,7 @@ func getText(env db.Env, keyword, textProvider, country, date string) ([]text, e
 		tt = append(tt, tweets...)
 	}
 	if textProvider == "news" || textProvider == "both" {
-		c := newsClient{NewsAPIUrl, env.NewsAPIKey, clientWithTimeout(true)}
+		c := apiClient{NewsAPIUrl, env.NewsAPIKey, clientWithTimeout(true)}
 		nn, err := c.getNews(keyword, country, date)
 		if err != nil {
 			return nil, fmt.Errorf("Failed on call to getNews in Analyze, %v", err)

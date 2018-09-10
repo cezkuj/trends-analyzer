@@ -17,12 +17,6 @@ type twitterAPI struct {
 	Statuses []status `json:"statuses"`
 }
 
-type twitterClient struct {
-	twitterAPIUrl string
-	twitterAPIKey string
-	httpClient    http.Client
-}
-
 type status struct {
 	//json decoding does not work for anything else than RFC 3339 format - decoding to string first
 	CreatedAt string `json:"created_at"`
@@ -30,7 +24,7 @@ type status struct {
 	Text      string `json:"text"`
 }
 
-func (c twitterClient) getTweets(keyword, lang, date string) ([]text, error) {
+func (c apiClient) getTweets(keyword, lang, date string) ([]text, error) {
 	tt := []text{}
 	langParam := ""
 	if lang != "any" {
@@ -39,12 +33,12 @@ func (c twitterClient) getTweets(keyword, lang, date string) ([]text, error) {
 		}
 		langParam = fmt.Sprintf("&lang=%v", lang)
 	}
-	req, err := http.NewRequest("GET", fmt.Sprintf("%v/1.1/search/tweets.json?q=%v%v&count=100", c.twitterAPIUrl, keyword, langParam), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%v/1.1/search/tweets.json?q=%v%v&count=100", c.apiUrl, keyword, langParam), nil)
 	if err != nil {
 		return nil, fmt.Errorf("Failed on creating twitter request in getTweets, %v", err)
 	}
-	req.Header.Add("Authorization", c.twitterAPIKey)
-	resp, err := c.httpClient.Do(req)
+	req.Header.Add("Authorization", c.apiKey)
+	resp, err := c.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("Failed on executing %v in getTweets, %v", req, err)
 	}
