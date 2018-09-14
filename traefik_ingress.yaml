@@ -2,6 +2,7 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: trends-analyzer
+  namespace: trends-analyzer
   annotations:
     kubernetes.io/ingress.class: traefik
     traefik.frontend.rule.type: PathPrefixStrip
@@ -13,22 +14,3 @@ spec:
         backend:
           serviceName: trends-analyzer-ui
           servicePort: 80
-
----
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: traefik-dashboard
-  namespace: kube-system
-  annotations:
-    kubernetes.io/ingress.class: traefik
-    traefik.frontend.rule.type: PathPrefixStrip
-spec:
-  rules:
-  - http:
-      paths:
-      - path: /dashboard
-        backend:
-          serviceName: traefik-ingress-service
-          servicePort: 8080
-

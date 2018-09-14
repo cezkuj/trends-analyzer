@@ -1,0 +1,6 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: trends-analyzer
+  labels:
+    name: trends-analyzer
