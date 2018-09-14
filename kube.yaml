@@ -1,0 +1,27 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: trends-analyzer
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: trends-analyzer
+    spec:
+      containers:
+      - name: homepage
+        image: cezkuj/trends-analyzer:0.1.0-CLOUD
+        ports:
+        - containerPort: 8000
+          name: http-api
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: trends-analyzer
+spec:
+  ports:
+  - port: 8000
+  selector:
+    app: trends-analyzer

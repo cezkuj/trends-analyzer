@@ -1,0 +1,8 @@
+dashboard:
+  enabled: true
+kubernetes:
+  namespaces:
+    - default
+    - kube-system
+rbac:
+  enabled: true
