@@ -57,8 +57,8 @@ func init() {
 	rootCmd.Flags().StringVarP(&dbPass, "pass", "p", "", "Sets password for database conneciton, required")
 	rootCmd.MarkFlagRequired("pass")
 	rootCmd.Flags().StringVarP(&dbHost, "host", "o", "localhost", "Sets host for database conneciton. Default value is localhost")
-	rootCmd.Flags().IntVarP(&dbPort, "port", "r", 3306, "Sets port for database conneciton. Default value is 3306")
-	rootCmd.Flags().StringVarP(&dbName, "name", "d", "trends-analyzer", "Sets name for database conneciton. Default value is trends-analyzer")
+	rootCmd.Flags().IntVarP(&dbPort, "port", "s", 3306, "Sets port for database conneciton. Default value is 3306")
+	rootCmd.Flags().StringVarP(&dbName, "name", "d", "trends", "Sets name for database conneciton. Default value is trends")
 	rootCmd.Flags().BoolVarP(&prod, "prod", "r", false, "Sets production mode with tls enabled. Default value is false.")
 	rootCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Sets logs to DEBUG level.")
 }

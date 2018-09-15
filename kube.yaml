@@ -12,8 +12,8 @@ spec:
     spec:
       containers:
       - name: trends-analyzer
-        image: cezkuj/trends-analyzer:0.0.1-CLOUD
-        args: ["-o", "($DB_HOST):3306", "-d", "trends", "-n", "$NEWSAPIKEY", "-p", "trends_analyzer", "-t", "$TWITTERAPIKEY", "-u", "ta"]
+        image: cezkuj/trends-analyzer:0.1.1
+        args: ["-o", "($DB_HOST)", "-n", "$NEWSAPIKEY", "-p", "trends_analyzer", "-t", "$TWITTERAPIKEY"]
         env:
         - name: DB_HOST
           valueFrom:
@@ -30,9 +30,19 @@ spec:
             secretKeyRef:
               name: trends-secret
               key: twitterAPIKey
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: "~/.gcloud.json"
         ports:
         - containerPort: 8000
           name: http-api
+        volumeMounts:
+        - name: gcloud-vol
+          mountPath: "~/.gcloud.json"
+          readOnly: true
+      volumes:
+      - name: gcloud-vol
+        secret:
+          secretName: gcloud-creds
 ---
 apiVersion: v1
 kind: Service
