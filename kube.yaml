@@ -11,8 +11,25 @@ spec:
         app: trends-analyzer
     spec:
       containers:
-      - name: homepage
-        image: cezkuj/trends-analyzer:0.1.0-CLOUD
+      - name: trends-analyzer
+        image: cezkuj/trends-analyzer:0.0.1-CLOUD
+        args: ["-o", "($DB_HOST):3306", "-d", "trends", "-n", "$NEWSAPIKEY", "-p", "trends_analyzer", "-t", "$TWITTERAPIKEY", "-u", "ta"]
+        env:
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: trends-secret
+              key: dbHost
+        - name: NEWSAPIKEY
+          valueFrom:
+            secretKeyRef:
+              name: trends-secret
+              key: newsAPIKey
+        - name: TWITTERAPIKEY
+          valueFrom:
+            secretKeyRef:
+              name: trends-secret
+              key: twitterAPIKey
         ports:
         - containerPort: 8000
           name: http-api
