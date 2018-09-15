@@ -5,12 +5,16 @@ metadata:
   namespace: trends-analyzer
   annotations:
     kubernetes.io/ingress.class: traefik
-    traefik.frontend.rule.type: PathPrefixStrip
 spec:
   rules:
   - http:
       paths:
+      - path: /api
+        backend:
+          serviceName: trends-analyzer
+          servicePort: 8000
       - path: /
         backend:
           serviceName: trends-analyzer-ui
           servicePort: 80
+
