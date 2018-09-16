@@ -13,13 +13,13 @@ spec:
       containers:
       - name: trends-analyzer
         image: cezkuj/trends-analyzer:0.1.4
-        args: ["-o", "$(DB_HOST)", "-n", "$(NEWSAPIKEY)", "-p", "trends_analyzer", "-t", "$(TWITTERAPIKEY)", "-ve"]
+        args: ["-n", "$(NEWSAPIKEY)", "-p", "$(DB_PASSWORD)", "-t", "$(TWITTERAPIKEY)", "-ve"]
         env:
-        - name: DB_HOST
+        - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
               name: trends-secret
-              key: dbHost
+              key: dbPassword
         - name: NEWSAPIKEY
           valueFrom:
             secretKeyRef:
@@ -31,18 +31,33 @@ spec:
               name: trends-secret
               key: twitterAPIKey
         - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: "~/.gcloud.json"
+          value: /secrets/gcloud/credentials.json
         ports:
         - containerPort: 8000
           name: http-api
         volumeMounts:
         - name: gcloud-vol
-          mountPath: "~/.gcloud.json"
+          mountPath: /secrets/gcloud/
+          readOnly: true
+      - name: cloudsql-proxy
+        image: gcr.io/cloudsql-docker/gce-proxy:1.11
+        command: ["/cloud_sql_proxy",
+                  "-instances=future-infusion-202918:europe-west3:trends=tcp:3306",
+                  "-credential_file=/secrets/cloudsql/credentials.json"]
+        securityContext:
+          runAsUser: 2  
+          allowPrivilegeEscalation: false
+        volumeMounts:
+        - name: cloudsql-instance-credentials
+          mountPath: /secrets/cloudsql
           readOnly: true
       volumes:
       - name: gcloud-vol
         secret:
           secretName: gcloud-creds
+      - name: cloudsql-instance-credentials
+        secret:
+          secretName: cloudsql-instance-credentials
 ---
 apiVersion: v1
 kind: Service
