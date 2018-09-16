@@ -17,6 +17,7 @@ var (
 	dbPort        int
 	dbName        string
 	prod          bool
+	readOnly      bool
 	twitterAPIKey string
 	newsAPIKey    string
 	verbose       bool
@@ -38,7 +39,7 @@ func startServer(cmd *cobra.Command, args []string) {
 		log.SetLevel(log.DebugLevel)
 	}
 	dbCfg := server.NewDbCfg(dbUser, dbPass, dbHost, dbPort, dbName)
-	server.StartServer(dbCfg, twitterAPIKey, newsAPIKey, prod)
+	server.StartServer(dbCfg, twitterAPIKey, newsAPIKey, prod, readOnly)
 
 }
 func Execute() {
@@ -60,5 +61,6 @@ func init() {
 	rootCmd.Flags().IntVarP(&dbPort, "port", "s", 3306, "Sets port for database conneciton. Default value is 3306")
 	rootCmd.Flags().StringVarP(&dbName, "name", "d", "trends", "Sets name for database conneciton. Default value is trends")
 	rootCmd.Flags().BoolVarP(&prod, "prod", "r", false, "Sets production mode with tls enabled. Default value is false.")
+	rootCmd.Flags().BoolVarP(&readOnly, "read-only", "e", false, "Sets read only mode. Default value is false.")
 	rootCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Sets logs to DEBUG level.")
 }

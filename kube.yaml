@@ -12,8 +12,8 @@ spec:
     spec:
       containers:
       - name: trends-analyzer
-        image: cezkuj/trends-analyzer:0.1.3
-        args: ["-o", "$(DB_HOST)", "-n", "$(NEWSAPIKEY)", "-p", "trends_analyzer", "-t", "$(TWITTERAPIKEY)"]
+        image: cezkuj/trends-analyzer:0.1.4
+        args: ["-o", "$(DB_HOST)", "-n", "$(NEWSAPIKEY)", "-p", "trends_analyzer", "-t", "$(TWITTERAPIKEY)", "-ve"]
         env:
         - name: DB_HOST
           valueFrom:

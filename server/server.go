@@ -31,16 +31,16 @@ func NewDbCfg(user, pass, host string, port int, name string) DbCfg {
 	return DbCfg{user, pass, host, port, name}
 }
 
-func StartServer(dbCfg DbCfg, twitterAPIKey, newsAPIKey string, prod bool) {
+func StartServer(dbCfg DbCfg, twitterAPIKey, newsAPIKey string, prod, readOnly bool) {
 	database, err := db.InitDb(fmt.Sprintf("%v:%v@tcp(%v:%v)/%v", dbCfg.user, dbCfg.pass, dbCfg.host, dbCfg.port, dbCfg.name))
 	if err != nil {
 		log.Fatal(fmt.Errorf("Failed on InitDb in StartServer, %v", err))
 	}
 	env := db.NewEnv(database, twitterAPIKey, newsAPIKey)
 	if prod {
-		startProdServer(env)
+		startProdServer(env, readOnly)
 	}
-	startDevServer(env)
+	startDevServer(env, readOnly)
 }
 
 type analyzeParams struct {
@@ -283,7 +283,7 @@ func parseTimestamp(timeStr string) (time.Time, error) {
 	return time.Unix(parsed/1000, 0), nil
 }
 
-func startProdServer(env db.Env) {
+func startProdServer(env db.Env, readOnly bool) {
 	m := &autocert.Manager{
 		Cache:      autocert.DirCache(".secret"),
 		Prompt:     autocert.AcceptTOS,
@@ -313,7 +313,7 @@ func startProdServer(env db.Env) {
 		Handler:      m.HTTPHandler(nil),
 	}
 	go func() { log.Fatal(srv.ListenAndServe()) }()
-	serveMux := createServeMux(env)
+	serveMux := createServeMux(env, readOnly)
 	srvTLS := &http.Server{
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
@@ -325,8 +325,8 @@ func startProdServer(env db.Env) {
 
 }
 
-func startDevServer(env db.Env) {
-	serveMux := createServeMux(env)
+func startDevServer(env db.Env, readOnly bool) {
+	serveMux := createServeMux(env, readOnly)
 	srv := &http.Server{
 		Addr:         ":8000",
 		ReadTimeout:  5 * time.Second,
@@ -337,10 +337,12 @@ func startDevServer(env db.Env) {
 	log.Println(srv.ListenAndServe())
 }
 
-func createServeMux(env db.Env) *http.ServeMux {
+func createServeMux(env db.Env, readOnly bool) *http.ServeMux {
 	router := mux.NewRouter()
 	apiRouter := router.PathPrefix("/api").Subrouter()
-	apiRouter.HandleFunc("/analyze", analyze(env)).Methods("POST")
+	if !readOnly {
+		apiRouter.HandleFunc("/analyze", analyze(env)).Methods("POST")
+	}
 	apiRouter.HandleFunc("/status", status(env)).Methods("GET")
 	apiRouter.HandleFunc("/keywords", keywords(env)).Methods("GET")
 	apiRouter.HandleFunc("/analyzes/{keyword}", analyzes(env)).Methods("GET")
