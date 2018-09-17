@@ -12,7 +12,7 @@ spec:
     spec:
       containers:
       - name: trends-analyzer
-        image: cezkuj/trends-analyzer:0.1.4
+        image: cezkuj/trends-analyzer:0.1.5
         args: ["-n", "$(NEWSAPIKEY)", "-p", "$(DB_PASSWORD)", "-t", "$(TWITTERAPIKEY)", "-ve"]
         env:
         - name: DB_PASSWORD
