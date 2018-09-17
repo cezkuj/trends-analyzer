@@ -7,7 +7,7 @@ spec:
   replicas: 2
   template:
     metadata:
-      labels
+      labels:
         app: trends-analyzer
     spec:
       containers:
