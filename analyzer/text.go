@@ -49,6 +49,7 @@ func clientWithTimeout(tlsSecure bool) (client *http.Client) {
 }
 
 func Analyze(env db.Env, keyword, textProvider, country, date string) {
+        log.Debug(fmt.Sprintf("Analyzing %v, %v, %v, %v, %v", env, keyword, textProvider, country, date))
 	tt, err := getText(env, keyword, textProvider, country, date)
 	if err != nil {
 		log.Error(fmt.Errorf("Analyze failed, %v", err))
@@ -97,6 +98,7 @@ func getText(env db.Env, keyword, textProvider, country, date string) ([]text, e
 		if err != nil {
 			return nil, fmt.Errorf("Failed on call to getTweets in Analyze, %v", err)
 		}
+                log.Debug(fmt.Sprintf("Successfully got tweets, %v", tweets))
 		tt = append(tt, tweets...)
 	}
 	if textProvider == "news" || textProvider == "both" {
@@ -105,6 +107,7 @@ func getText(env db.Env, keyword, textProvider, country, date string) ([]text, e
 		if err != nil {
 			return nil, fmt.Errorf("Failed on call to getNews in Analyze, %v", err)
 		}
+                log.Debug(fmt.Sprintf("Succesfully got news, %v", nn))
 		tt = append(tt, nn...)
 	}
 	return tt, nil
