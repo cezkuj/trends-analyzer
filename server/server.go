@@ -31,12 +31,13 @@ func NewDbCfg(user, pass, host string, port int, name string) DbCfg {
 	return DbCfg{user, pass, host, port, name}
 }
 
-func StartServer(dbCfg DbCfg, twitterAPIKey, newsAPIKey string, prod, readOnly bool) {
+func StartServer(dbCfg DbCfg, twitterAPIKey, newsAPIKey string, dispatchInterval int, prod, readOnly bool) {
 	database, err := db.InitDb(fmt.Sprintf("%v:%v@tcp(%v:%v)/%v", dbCfg.user, dbCfg.pass, dbCfg.host, dbCfg.port, dbCfg.name))
 	if err != nil {
 		log.Fatal(fmt.Errorf("Failed on InitDb in StartServer, %v", err))
 	}
 	env := db.NewEnv(database, twitterAPIKey, newsAPIKey)
+	go analyzer.StartDispatching(env, dispatchInterval)
 	if prod {
 		startProdServer(env, readOnly)
 	}
@@ -200,12 +201,6 @@ func parseTime(timeStr string, defaultTime time.Time) (time.Time, error) {
 	return parsed, nil
 }
 
-func dispatcher(env db.Env) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		go analyzer.StartDispatching(env)
-	}
-}
-
 func countries(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -348,7 +343,6 @@ func createServeMux(env db.Env, readOnly bool) *http.ServeMux {
 	apiRouter.HandleFunc("/analyzes/{keyword}", analyzes(env)).Methods("GET")
 	apiRouter.HandleFunc("/countries/{keyword}", countries(env)).Methods("GET")
 	apiRouter.HandleFunc("/rates/{baseCur}/{cur}", rates(env)).Methods("GET")
-	apiRouter.HandleFunc("/dispatcher", dispatcher(env)).Methods("POST")
 	serveMux := &http.ServeMux{}
 	serveMux.Handle("/", router)
 	return serveMux

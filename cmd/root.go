@@ -11,16 +11,17 @@ import (
 )
 
 var (
-	dbUser        string
-	dbPass        string
-	dbHost        string
-	dbPort        int
-	dbName        string
-	prod          bool
-	readOnly      bool
-	twitterAPIKey string
-	newsAPIKey    string
-	verbose       bool
+	dbUser             string
+	dbPass             string
+	dbHost             string
+	dbPort             int
+	dbName             string
+	dispatcherInterval int
+	prod               bool
+	readOnly           bool
+	twitterAPIKey      string
+	newsAPIKey         string
+	verbose            bool
 )
 
 var rootCmd = &cobra.Command{
@@ -39,7 +40,7 @@ func startServer(cmd *cobra.Command, args []string) {
 		log.SetLevel(log.DebugLevel)
 	}
 	dbCfg := server.NewDbCfg(dbUser, dbPass, dbHost, dbPort, dbName)
-	server.StartServer(dbCfg, twitterAPIKey, newsAPIKey, prod, readOnly)
+	server.StartServer(dbCfg, twitterAPIKey, newsAPIKey, dispatcherInterval, prod, readOnly)
 
 }
 func Execute() {
@@ -63,4 +64,5 @@ func init() {
 	rootCmd.Flags().BoolVarP(&prod, "prod", "r", false, "Sets production mode with tls enabled. Default value is false.")
 	rootCmd.Flags().BoolVarP(&readOnly, "read-only", "e", false, "Sets read only mode. Default value is false.")
 	rootCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Sets logs to DEBUG level.")
+	rootCmd.Flags().IntVarP(&dispatcherInterval, "dispatcher-interval", "b", 20, "Interval in minutes. Default value is 20.")
 }
