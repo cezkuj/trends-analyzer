@@ -12,7 +12,7 @@ type DigitalCurrencySeriesValue struct {
 	Price float64
 }
 
-func Crypto(key, fromCurrency, toCurrency string, startDate, endDate time.Time) ([]DigitalCurrencySeriesValue, error) {
+func Series(key, fromCurrency, toCurrency string, startDate, endDate time.Time) ([]DigitalCurrencySeriesValue, error) {
 	client := av.NewClient(key)
 	cryptoSeries, err := client.DigitalCurrency(fromCurrency, toCurrency)
 	if err != nil {

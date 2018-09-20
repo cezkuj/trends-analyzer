@@ -12,7 +12,7 @@ type TimeSeriesValue struct {
 	Price float64
 }
 
-func Stocks(key, symbol string, startDate, endDate time.Time) ([]TimeSeriesValue, error) {
+func Series(key, symbol string, startDate, endDate time.Time) ([]TimeSeriesValue, error) {
 	client := av.NewClient(key)
 	stocksSeries, err := client.StockTimeSeries(av.TimeSeriesDaily, symbol)
 	if err != nil {

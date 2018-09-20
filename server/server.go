@@ -34,7 +34,7 @@ func NewDbCfg(user, pass, host string, port int, name string) DbCfg {
 	return DbCfg{user, pass, host, port, name}
 }
 
-func StartServer(dbCfg DbCfg, twitterAPIKey, newsAPIKey string, dispatchInterval int, prod, readOnly bool) {
+func StartServer(dbCfg DbCfg, twitterAPIKey, newsAPIKey, stocksAPIKey string, dispatchInterval int, prod, readOnly bool) {
 	database, err := db.InitDb(fmt.Sprintf("%v:%v@tcp(%v:%v)/%v", dbCfg.user, dbCfg.pass, dbCfg.host, dbCfg.port, dbCfg.name))
 	if err != nil {
 		log.Fatal(fmt.Errorf("Failed on InitDb in StartServer, %v", err))
@@ -245,7 +245,7 @@ func stocks(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		stocksSeries, err = stocks.Series(env.StocksAPIKey, symbol, startDate, endDate)
+		stocksSeries, err := stock.Series(env.StocksAPIKey, symbol, startDate, endDate)
 		if err != nil {
 			log.Error(fmt.Errorf("Call to stocks Series failed in stocks, %v", err))
 			w.WriteHeader(http.StatusBadRequest)
@@ -253,7 +253,7 @@ func stocks(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 		}
 		stocksSeriesJSON, err := json.Marshal(stocksSeries)
 		if err != nil {
-			log.Error(fmt.Errorf("Failed on marshalling %v in stocks, %v", stacksSeries, err))
+			log.Error(fmt.Errorf("Failed on marshalling %v in stocks, %v", stocksSeries, err))
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -261,7 +261,7 @@ func stocks(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func crypto(env db.Env) func(w http.ResponseWriter, r *http.Request) {
+func cryptocurrencies(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		fromCurrency := vars["fromCurrency"]
@@ -272,7 +272,7 @@ func crypto(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		cryptoSeries, err = crypto.Series(env.StocksAPIKey, fromCurrency, toCurrency, startDate, endDate)
+		cryptoSeries, err := crypto.Series(env.StocksAPIKey, fromCurrency, toCurrency, startDate, endDate)
 		if err != nil {
 			log.Error(fmt.Errorf("Call to crypto Series failed in crypto, %v", err))
 			w.WriteHeader(http.StatusBadRequest)
@@ -329,11 +329,11 @@ func parseTimestamp(timeStr string) (time.Time, error) {
 func parseTimestamps(values url.Values) (time.Time, time.Time, error) {
 	startDate, err := parseTimestamp(values.Get("startDate"))
 	if err != nil {
-		return nil, nil, fmt.Errorf("Failed on call to parseTimestamp, %v", err)
+		return time.Time{}, time.Time{}, fmt.Errorf("Failed on call to parseTimestamp, %v", err)
 	}
 	endDate, err := parseTimestamp(values.Get("endDate"))
 	if err != nil {
-		return nil, nil, fmt.Errorf("Failed on call to parseTimestamp, %v", err)
+		return time.Time{}, time.Time{}, fmt.Errorf("Failed on call to parseTimestamp, %v", err)
 	}
 	return startDate, endDate, nil
 
@@ -405,7 +405,7 @@ func createServeMux(env db.Env, readOnly bool) *http.ServeMux {
 	apiRouter.HandleFunc("/countries/{keyword}", countries(env)).Methods("GET")
 	apiRouter.HandleFunc("/rates/{baseCur}/{cur}", rates(env)).Methods("GET")
 	apiRouter.HandleFunc("/stocks/{symbol}", stocks(env)).Methods("GET")
-	apiRouter.HandleFunc("/crypto/{fromCurrency}/{toCurrency}", crypto(env)).Methods("GET")
+	apiRouter.HandleFunc("/crypto/{fromCurrency}/{toCurrency}", cryptocurrencies(env)).Methods("GET")
 	serveMux := &http.ServeMux{}
 	serveMux.Handle("/", router)
 	return serveMux
