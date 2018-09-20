@@ -15,10 +15,11 @@ type Env struct {
 	db            *sql.DB
 	TwitterAPIKey string
 	NewsAPIKey    string
+	StocksAPIKey  string
 }
 
-func NewEnv(db *sql.DB, twitterAPIKey, newsAPIKey string) Env {
-	return Env{db, twitterAPIKey, newsAPIKey}
+func NewEnv(db *sql.DB, twitterAPIKey, newsAPIKey, stocksAPIKey string) Env {
+	return Env{db, twitterAPIKey, newsAPIKey, stocksAPIKey}
 }
 
 type Analyzis struct {

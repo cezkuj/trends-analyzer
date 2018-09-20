@@ -9,14 +9,17 @@ import (
 	"golang.org/x/crypto/acme/autocert"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/cezkuj/trends-analyzer/analyzer"
+	"github.com/cezkuj/trends-analyzer/crypto"
 	"github.com/cezkuj/trends-analyzer/currency"
 	"github.com/cezkuj/trends-analyzer/db"
+	"github.com/cezkuj/trends-analyzer/stock"
 )
 
 type DbCfg struct {
@@ -36,7 +39,7 @@ func StartServer(dbCfg DbCfg, twitterAPIKey, newsAPIKey string, dispatchInterval
 	if err != nil {
 		log.Fatal(fmt.Errorf("Failed on InitDb in StartServer, %v", err))
 	}
-	env := db.NewEnv(database, twitterAPIKey, newsAPIKey)
+	env := db.NewEnv(database, twitterAPIKey, newsAPIKey, stocksAPIKey)
 	go analyzer.StartDispatching(env, dispatchInterval)
 	if prod {
 		startProdServer(env, readOnly)
@@ -232,25 +235,70 @@ func countries(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func stocks(env db.Env) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		symbol := vars["symbol"]
+		startDate, endDate, err := parseTimestamps(r.URL.Query())
+		if err != nil {
+			log.Error(fmt.Errorf("Failed on call to parseTimestamps, %v", err))
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		stocksSeries, err = stocks.Series(env.StocksAPIKey, symbol, startDate, endDate)
+		if err != nil {
+			log.Error(fmt.Errorf("Call to stocks Series failed in stocks, %v", err))
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		stocksSeriesJSON, err := json.Marshal(stocksSeries)
+		if err != nil {
+			log.Error(fmt.Errorf("Failed on marshalling %v in stocks, %v", stacksSeries, err))
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		w.Write(stocksSeriesJSON)
+	}
+}
+
+func crypto(env db.Env) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		fromCurrency := vars["fromCurrency"]
+		toCurrency := vars["toCurrency"]
+		startDate, endDate, err := parseTimestamps(r.URL.Query())
+		if err != nil {
+			log.Error(fmt.Errorf("Failed on call to parseTimestamps, %v", err))
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		cryptoSeries, err = crypto.Series(env.StocksAPIKey, fromCurrency, toCurrency, startDate, endDate)
+		if err != nil {
+			log.Error(fmt.Errorf("Call to crypto Series failed in crypto, %v", err))
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		cryptoSeriesJSON, err := json.Marshal(cryptoSeries)
+		if err != nil {
+			log.Error(fmt.Errorf("Failed on marshalling %v in crypto, %v", cryptoSeries, err))
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		w.Write(cryptoSeriesJSON)
+	}
+}
+
 func rates(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		baseCur := vars["baseCur"]
 		cur := vars["cur"]
-		values := r.URL.Query()
-		startDate, err := parseTimestamp(values.Get("startDate"))
+		startDate, endDate, err := parseTimestamps(r.URL.Query())
 		if err != nil {
-			log.Error(fmt.Errorf("Failed on call to parseTimestamp, %v", err))
+			log.Error(fmt.Errorf("Failed on call to parseTimestamps, %v", err))
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		endDate, err := parseTimestamp(values.Get("endDate"))
-		if err != nil {
-			log.Error(fmt.Errorf("Failed on call to parseTimestamp, %v", err))
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
 		ratesSeries, err := currency.GetRatesSeries(baseCur, cur, startDate, endDate)
 		if err != nil {
 			log.Error(fmt.Errorf("Call to GetRatesSeries failed in rates, %v", err))
@@ -276,6 +324,19 @@ func parseTimestamp(timeStr string) (time.Time, error) {
 		return time.Time{}, fmt.Errorf("Failed on parsing timestamp, %v", err)
 	}
 	return time.Unix(parsed/1000, 0), nil
+}
+
+func parseTimestamps(values url.Values) (time.Time, time.Time, error) {
+	startDate, err := parseTimestamp(values.Get("startDate"))
+	if err != nil {
+		return nil, nil, fmt.Errorf("Failed on call to parseTimestamp, %v", err)
+	}
+	endDate, err := parseTimestamp(values.Get("endDate"))
+	if err != nil {
+		return nil, nil, fmt.Errorf("Failed on call to parseTimestamp, %v", err)
+	}
+	return startDate, endDate, nil
+
 }
 
 func startProdServer(env db.Env, readOnly bool) {
@@ -343,6 +404,8 @@ func createServeMux(env db.Env, readOnly bool) *http.ServeMux {
 	apiRouter.HandleFunc("/analyzes/{keyword}", analyzes(env)).Methods("GET")
 	apiRouter.HandleFunc("/countries/{keyword}", countries(env)).Methods("GET")
 	apiRouter.HandleFunc("/rates/{baseCur}/{cur}", rates(env)).Methods("GET")
+	apiRouter.HandleFunc("/stocks/{symbol}", stocks(env)).Methods("GET")
+	apiRouter.HandleFunc("/crypto/{fromCurrency}/{toCurrency}", crypto(env)).Methods("GET")
 	serveMux := &http.ServeMux{}
 	serveMux.Handle("/", router)
 	return serveMux

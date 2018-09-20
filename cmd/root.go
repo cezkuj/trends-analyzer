@@ -21,6 +21,7 @@ var (
 	readOnly           bool
 	twitterAPIKey      string
 	newsAPIKey         string
+	stocksAPIKey       string
 	verbose            bool
 )
 
@@ -40,7 +41,7 @@ func startServer(cmd *cobra.Command, args []string) {
 		log.SetLevel(log.DebugLevel)
 	}
 	dbCfg := server.NewDbCfg(dbUser, dbPass, dbHost, dbPort, dbName)
-	server.StartServer(dbCfg, twitterAPIKey, newsAPIKey, dispatcherInterval, prod, readOnly)
+	server.StartServer(dbCfg, twitterAPIKey, newsAPIKey, stocksAPIKey, dispatcherInterval, prod, readOnly)
 
 }
 func Execute() {
@@ -55,11 +56,13 @@ func init() {
 	rootCmd.MarkFlagRequired("twitter-api-key")
 	rootCmd.Flags().StringVarP(&newsAPIKey, "news-api-key", "n", "", "News API key.")
 	rootCmd.MarkFlagRequired("news-api-key")
+	rootCmd.Flags().StringVarP(&stocksAPIKey, "stocks-api-key", "s", "", "Stocks API key.")
+	rootCmd.MarkFlagRequired("stocks-api-key")
 	rootCmd.Flags().StringVarP(&dbUser, "user", "u", "ta", "Sets user for database conneciton. Default value is ta.")
 	rootCmd.Flags().StringVarP(&dbPass, "pass", "p", "", "Sets password for database conneciton, required")
 	rootCmd.MarkFlagRequired("pass")
 	rootCmd.Flags().StringVarP(&dbHost, "host", "o", "localhost", "Sets host for database conneciton. Default value is localhost")
-	rootCmd.Flags().IntVarP(&dbPort, "port", "s", 3306, "Sets port for database conneciton. Default value is 3306")
+	rootCmd.Flags().IntVarP(&dbPort, "port", "q", 3306, "Sets port for database conneciton. Default value is 3306")
 	rootCmd.Flags().StringVarP(&dbName, "name", "d", "trends", "Sets name for database conneciton. Default value is trends")
 	rootCmd.Flags().BoolVarP(&prod, "prod", "r", false, "Sets production mode with tls enabled. Default value is false.")
 	rootCmd.Flags().BoolVarP(&readOnly, "read-only", "e", false, "Sets read only mode. Default value is false.")
