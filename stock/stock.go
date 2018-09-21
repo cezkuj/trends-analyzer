@@ -5,6 +5,7 @@ import (
 	"time"
 
 	av "github.com/cmckee-dev/go-alpha-vantage"
+	log "github.com/sirupsen/logrus"
 )
 
 type TimeSeriesValue struct {
@@ -21,12 +22,13 @@ func Series(key, symbol string, startDate, endDate time.Time) ([]TimeSeriesValue
 	filteredStocks := []TimeSeriesValue{}
 	for _, s := range stocksSeries {
 		if s.Time.After(endDate) {
-			continue
+			return filteredStocks, nil
 		}
 		if s.Time.Before(startDate) {
-			return filteredStocks, nil
+			continue
 		}
 		filteredStocks = append(filteredStocks, TimeSeriesValue{s.Time, s.Open})
 	}
+	log.Debug(filteredStocks)
 	return filteredStocks, nil
 }

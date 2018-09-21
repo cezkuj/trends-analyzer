@@ -5,6 +5,7 @@ import (
 	"time"
 
 	av "github.com/cmckee-dev/go-alpha-vantage"
+	log "github.com/sirupsen/logrus"
 )
 
 type DigitalCurrencySeriesValue struct {
@@ -21,12 +22,13 @@ func Series(key, fromCurrency, toCurrency string, startDate, endDate time.Time) 
 	filteredCrypto := []DigitalCurrencySeriesValue{}
 	for _, s := range cryptoSeries {
 		if s.Time.After(endDate) {
-			continue
+			return filteredCrypto, nil
 		}
 		if s.Time.Before(startDate) {
-			return filteredCrypto, nil
+			continue
 		}
 		filteredCrypto = append(filteredCrypto, DigitalCurrencySeriesValue{s.Time, s.Price})
 	}
+	log.Debug(filteredCrypto)
 	return filteredCrypto, nil
 }
