@@ -9,8 +9,8 @@ import (
 )
 
 type TimeSeriesValue struct {
-	Time  time.Time
-	Price float64
+	Time  time.Time `json:"time"`
+	Price float64   `json:"price"`
 }
 
 func Series(key, symbol string, startDate, endDate time.Time) ([]TimeSeriesValue, error) {
