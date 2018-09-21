@@ -1,12 +1,10 @@
 package server
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
-	"golang.org/x/crypto/acme/autocert"
 	"io"
 	"net/http"
 	"net/url"
@@ -34,17 +32,14 @@ func NewDbCfg(user, pass, host string, port int, name string) DbCfg {
 	return DbCfg{user, pass, host, port, name}
 }
 
-func StartServer(dbCfg DbCfg, twitterAPIKey, newsAPIKey, stocksAPIKey string, dispatchInterval int, prod, readOnly bool) {
+func StartServer(dbCfg DbCfg, twitterAPIKey, newsAPIKey, stocksAPIKey string, dispatchInterval int, readOnly bool) {
 	database, err := db.InitDb(fmt.Sprintf("%v:%v@tcp(%v:%v)/%v", dbCfg.user, dbCfg.pass, dbCfg.host, dbCfg.port, dbCfg.name))
 	if err != nil {
 		log.Fatal(fmt.Errorf("Failed on InitDb in StartServer, %v", err))
 	}
 	env := db.NewEnv(database, twitterAPIKey, newsAPIKey, stocksAPIKey)
 	go analyzer.StartDispatching(env, dispatchInterval)
-	if prod {
-		startProdServer(env, readOnly)
-	}
-	startDevServer(env, readOnly)
+	startHttpServer(env, readOnly)
 }
 
 type analyzeParams struct {
@@ -339,49 +334,7 @@ func parseTimestamps(values url.Values) (time.Time, time.Time, error) {
 
 }
 
-func startProdServer(env db.Env, readOnly bool) {
-	m := &autocert.Manager{
-		Cache:      autocert.DirCache(".secret"),
-		Prompt:     autocert.AcceptTOS,
-		HostPolicy: autocert.HostWhitelist("gopage.cezkuj.com"),
-	}
-
-	tlsConfig := &tls.Config{
-		PreferServerCipherSuites: true,
-		CurvePreferences: []tls.CurveID{
-			tls.CurveP256,
-			tls.X25519,
-		},
-		MinVersion: tls.VersionTLS12,
-		CipherSuites: []uint16{
-			tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-			tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-			tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
-			tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
-			tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-		},
-		GetCertificate: m.GetCertificate,
-	}
-	srv := &http.Server{
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 5 * time.Second,
-		Handler:      m.HTTPHandler(nil),
-	}
-	go func() { log.Fatal(srv.ListenAndServe()) }()
-	serveMux := createServeMux(env, readOnly)
-	srvTLS := &http.Server{
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		IdleTimeout:  120 * time.Second,
-		TLSConfig:    tlsConfig,
-		Handler:      serveMux,
-	}
-	log.Println(srvTLS.ListenAndServeTLS("", ""))
-
-}
-
-func startDevServer(env db.Env, readOnly bool) {
+func startHttpServer(env db.Env, readOnly bool) {
 	serveMux := createServeMux(env, readOnly)
 	srv := &http.Server{
 		Addr:         ":8000",
