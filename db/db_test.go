@@ -165,8 +165,7 @@ func setupEnv() Env {
 	if err != nil {
 		log.Fatal(err)
 	}
-	truncateTable("keywords")
-	truncateTable("analyzes")
+	cleanUp()
 	log.SetLevel(log.DebugLevel)
 	return Env{db: db}
 
@@ -175,5 +174,6 @@ func setupEnv() Env {
 func cleanUp() {
 	truncateTable("keywords")
 	truncateTable("analyzes")
+	truncateTable("users")
 
 }
