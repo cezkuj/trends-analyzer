@@ -12,15 +12,16 @@ import (
 )
 
 type Env struct {
-	db            *sql.DB
-	TwitterAPIKey string
-	NewsAPIKey    string
-	StocksAPIKey  string
-	salt          string
+	db               *sql.DB
+	TwitterAPIKey    string
+	NewsAPIKey       string
+	StocksAPIKey     string
+	salt             string
+	RegistrationCode string
 }
 
-func NewEnv(db *sql.DB, twitterAPIKey, newsAPIKey, stocksAPIKey, salt string) Env {
-	return Env{db, twitterAPIKey, newsAPIKey, stocksAPIKey, salt}
+func NewEnv(db *sql.DB, twitterAPIKey, newsAPIKey, stocksAPIKey, salt, registrationCode string) Env {
+	return Env{db, twitterAPIKey, newsAPIKey, stocksAPIKey, salt, registrationCode}
 }
 
 type Analyzis struct {
@@ -89,8 +90,7 @@ func InitDb(db_connection string) (*sql.DB, error) {
           username TEXT NOT NULL,
           email TEXT NOT NULL,
           hash TEXT NOT NULL,
-          token TEXT NOT NULL,
-          validity DATETIME NOT NULL);
+          token TEXT NOT NULL);
         `
 	_, err = db.Exec(createUsers)
 	if err != nil {

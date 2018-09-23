@@ -16,7 +16,6 @@ type User struct {
 	email    string
 	hash     string
 	token    string
-	validity time.Time
 }
 
 func (env Env) getUsersWithName(username string) ([]User, error) {
@@ -28,7 +27,7 @@ func (env Env) getUsersWithName(username string) ([]User, error) {
 	defer rows.Close()
 	for i := 0; rows.Next(); i++ {
 		user := User{}
-		if err := rows.Scan(&user.id, &user.username, &user.email, &user.hash, &user.token, &user.validity); err != nil {
+		if err := rows.Scan(&user.id, &user.username, &user.email, &user.hash, &user.token); err != nil {
 			return nil, fmt.Errorf("Rows scan failed in getUsersWithName %v, %v", username, err)
 		}
 		users = append(users, user)
@@ -61,10 +60,10 @@ func (env Env) UserIsPresent(username string) (bool, error) {
 }
 
 func (env Env) CreateUser(username, email, password string) (string, error) {
-	token, validity := newTokenAndValidity()
-	_, err := env.db.Exec("INSERT INTO users (username, email, hash, token, validity) VALUES (?, ?, ?, ?, ?)", username, email, getSHA1Hash(password+env.salt), token, validity)
+	token := newToken()
+	_, err := env.db.Exec("INSERT INTO users (username, email, hash, token) VALUES (?, ?, ?, ?)", username, email, getSHA1Hash(password+env.salt), token)
 	if err != nil {
-		return "", fmt.Errorf("failed on insering user %v, %v", username, err)
+		return "", fmt.Errorf("failed on inserting user %v, %v", username, err)
 	}
 	return token, nil
 
@@ -81,8 +80,8 @@ func (env Env) PasswordIsCorrect(username, password string) (bool, error) {
 
 }
 func (env Env) UpdateToken(username string) (string, error) {
-	token, validity := newTokenAndValidity()
-	_, err := env.db.Exec("UPDATE users SET token=?, validity=? where username=?", token, validity, username)
+	token := newToken()
+	_, err := env.db.Exec("UPDATE users SET token=? WHERE username=?", token, username)
 	return token, err
 
 }
@@ -117,8 +116,7 @@ func getSHA1Hash(text string) string {
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
-func newTokenAndValidity() (string, time.Time) {
-	now := time.Now()
+func newToken() string {
 	token := randSeq(32)
-	return token, now.Add(24 * time.Hour)
+	return token
 }

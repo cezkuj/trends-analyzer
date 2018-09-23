@@ -18,6 +18,7 @@ var (
 	dbName             string
 	dispatcherInterval int
 	readOnly           bool
+	registrationCode   string
 	twitterAPIKey      string
 	newsAPIKey         string
 	stocksAPIKey       string
@@ -41,7 +42,7 @@ func startServer(cmd *cobra.Command, args []string) {
 		log.SetLevel(log.DebugLevel)
 	}
 	dbCfg := server.NewDbCfg(dbUser, dbPass, dbHost, dbPort, dbName)
-	server.StartServer(dbCfg, twitterAPIKey, newsAPIKey, stocksAPIKey, salt, dispatcherInterval, readOnly)
+	server.StartServer(dbCfg, twitterAPIKey, newsAPIKey, stocksAPIKey, salt, registrationCode, dispatcherInterval, readOnly)
 
 }
 func Execute() {
@@ -60,6 +61,8 @@ func init() {
 	rootCmd.MarkFlagRequired("stocks-api-key")
 	rootCmd.Flags().StringVarP(&salt, "salt", "a", "", "Salt for encrypting users' passwords.")
 	rootCmd.MarkFlagRequired("salt")
+	rootCmd.Flags().StringVarP(&registrationCode, "registration-code", "r", "", "Registarion code to provide while registarion.")
+	rootCmd.MarkFlagRequired("registration-code")
 	rootCmd.Flags().StringVarP(&dbUser, "user", "u", "ta", "Sets user for database conneciton. Default value is ta.")
 	rootCmd.Flags().StringVarP(&dbPass, "pass", "p", "", "Sets password for database conneciton, required")
 	rootCmd.MarkFlagRequired("pass")
