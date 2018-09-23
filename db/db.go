@@ -16,10 +16,11 @@ type Env struct {
 	TwitterAPIKey string
 	NewsAPIKey    string
 	StocksAPIKey  string
+	salt          string
 }
 
-func NewEnv(db *sql.DB, twitterAPIKey, newsAPIKey, stocksAPIKey string) Env {
-	return Env{db, twitterAPIKey, newsAPIKey, stocksAPIKey}
+func NewEnv(db *sql.DB, twitterAPIKey, newsAPIKey, stocksAPIKey, salt string) Env {
+	return Env{db, twitterAPIKey, newsAPIKey, stocksAPIKey, salt}
 }
 
 type Analyzis struct {
@@ -81,6 +82,21 @@ func InitDb(db_connection string) (*sql.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Failed on executing creation of keywords table, %v", err)
 	}
+
+	createUsers := `
+          CREATE TABLE IF NOT EXISTS users (
+          id SERIAL NOT NULL PRIMARY KEY,
+          username TEXT NOT NULL,
+          email TEXT NOT NULL,
+          hash TEXT NOT NULL,
+          token TEXT NOT NULL,
+          validity DATETIME NOT NULL);
+        `
+	_, err = db.Exec(createUsers)
+	if err != nil {
+		return nil, fmt.Errorf("Failed on executing creation of users table, %v", err)
+	}
+
 	return db, nil
 }
 

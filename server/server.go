@@ -32,12 +32,12 @@ func NewDbCfg(user, pass, host string, port int, name string) DbCfg {
 	return DbCfg{user, pass, host, port, name}
 }
 
-func StartServer(dbCfg DbCfg, twitterAPIKey, newsAPIKey, stocksAPIKey string, dispatchInterval int, readOnly bool) {
+func StartServer(dbCfg DbCfg, twitterAPIKey, newsAPIKey, stocksAPIKey, salt string, dispatchInterval int, readOnly bool) {
 	database, err := db.InitDb(fmt.Sprintf("%v:%v@tcp(%v:%v)/%v", dbCfg.user, dbCfg.pass, dbCfg.host, dbCfg.port, dbCfg.name))
 	if err != nil {
 		log.Fatal(fmt.Errorf("Failed on InitDb in StartServer, %v", err))
 	}
-	env := db.NewEnv(database, twitterAPIKey, newsAPIKey, stocksAPIKey)
+	env := db.NewEnv(database, twitterAPIKey, newsAPIKey, stocksAPIKey, salt)
 	go analyzer.StartDispatching(env, dispatchInterval)
 	startHttpServer(env, readOnly)
 }
