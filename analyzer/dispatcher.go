@@ -13,10 +13,14 @@ import (
 func StartDispatching(env db.Env, interval int) {
 	rand.Seed(time.Now().Unix())
 	for {
+		time.Sleep(time.Duration(interval) * time.Minute)
 		keywords, err := env.GetKeywords()
 		if err != nil {
 			log.Error(fmt.Errorf("GetKeywords in StartDispatching failed on %v", err))
 			return
+		}
+		if len(keywords) == 0 {
+			continue
 		}
 		k := keywords[rand.Intn(len(keywords))]
 		a, err := env.GetAnalyzes(k.Name, time.Time{}, time.Now(), "any")
@@ -26,7 +30,5 @@ func StartDispatching(env db.Env, interval int) {
 		}
 		log.Info(fmt.Sprintf("Started analyzing: %v", k))
 		go Analyze(env, k.Name, "both", a[0].Country, "any")
-		time.Sleep(time.Duration(interval) * time.Minute)
-
 	}
 }

@@ -26,6 +26,7 @@ const (
 	EverythingOk              = "EVERYTHING_OK"
 	RegistrationCodeIncorrect = "REGISTRATION_CODE_INCORRECT"
 	TokenIncorrect            = "TOKEN_INCORRECT"
+	UserAlreadyPresent        = "USER_ALREADY_PRESENT"
 )
 
 type DbCfg struct {
@@ -347,6 +348,7 @@ func login(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 		decoder := json.NewDecoder(r.Body)
 		var dat map[string]string
 		err := decoder.Decode(&dat)
+		log.Debug(dat)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			log.Error(fmt.Errorf("Failed on decoding in login, %v", err))
@@ -366,7 +368,7 @@ func login(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 		}
 		if !present {
 			log.Debug(fmt.Sprintf("User %v is not present", username))
-			io.WriteString(w, fmt.Sprintf(`"status":"%v"`, UserNotPresent))
+			io.WriteString(w, fmt.Sprintf(`{"status":"%v"}`, UserNotPresent))
 			return
 		}
 		correct, err := env.PasswordIsCorrect(username, password)
@@ -377,7 +379,7 @@ func login(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 		}
 		if !correct {
 			log.Debug(fmt.Sprintf("Password for %v is not correct", username))
-			io.WriteString(w, fmt.Sprintf(`"status":"%v"`, PasswordIncorrect))
+			io.WriteString(w, fmt.Sprintf(`{"status":"%v"}`, PasswordIncorrect))
 			return
 		}
 		token, err := env.UpdateToken(username)
@@ -387,7 +389,7 @@ func login(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		setCookies(w, username, token)
-		io.WriteString(w, fmt.Sprintf(`"status":"%v"`, EverythingOk))
+		io.WriteString(w, fmt.Sprintf(`{"status":"%v"}`, EverythingOk))
 	}
 }
 
@@ -396,6 +398,7 @@ func register(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 		decoder := json.NewDecoder(r.Body)
 		var dat map[string]string
 		err := decoder.Decode(&dat)
+		log.Debug(dat)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			log.Error(fmt.Errorf("failed on decoding in register, %v", err))
@@ -409,9 +412,21 @@ func register(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 		}
 		if registrationCode != env.RegistrationCode {
 			log.Debug(fmt.Sprintf("Registation code for user  %v is incorrect", username))
-			io.WriteString(w, fmt.Sprintf(`"status":"%v"`, RegistrationCodeIncorrect))
+			io.WriteString(w, fmt.Sprintf(`{"status":"%v"}`, RegistrationCodeIncorrect))
 			return
 		}
+		present, err := env.UserIsPresent(username)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			log.Error(fmt.Errorf("Failed on call to UserIsPresent in register, %v", err))
+			return
+		}
+		if present {
+			log.Debug(fmt.Sprintf("User %v is already present", username))
+			io.WriteString(w, fmt.Sprintf(`{"status":"%v"}`, UserAlreadyPresent))
+			return
+		}
+
 		token, err := env.CreateUser(username, email, password)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -419,7 +434,7 @@ func register(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		setCookies(w, username, token)
-		io.WriteString(w, fmt.Sprintf(`"status":"%v"`, EverythingOk))
+		io.WriteString(w, fmt.Sprintf(`{"status":"%v"}`, EverythingOk))
 	}
 }
 
@@ -479,10 +494,10 @@ func authenticate(env db.Env) func(w http.ResponseWriter, r *http.Request) {
 		}
 		if !authenticated {
 			log.Debug(fmt.Sprintf("Token for user  %v is incorrect", username))
-			io.WriteString(w, fmt.Sprintf(`"status":"%v"`, TokenIncorrect))
+			io.WriteString(w, fmt.Sprintf(`{"status":"%v"}`, TokenIncorrect))
 			return
 		}
-		io.WriteString(w, fmt.Sprintf(`"status":"%v"`, EverythingOk))
+		io.WriteString(w, fmt.Sprintf(`{"status":"%v"}`, EverythingOk))
 	}
 }
 
